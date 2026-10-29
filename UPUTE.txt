@@ -1,0 +1,27 @@
+GRBOMETAR - upute
+
+NA RAČUNALU (kamera)
+1. Raspakiraj mapu.
+2. Otvori index.html dvostrukim klikom (u Chromeu ili Edgeu).
+3. Odaberi "Kamera" i dopusti pristup kameri.
+   Prvo pokretanje skida model za prepoznavanje tijela (do 15 MB), zato tada treba internet.
+4. "Mini prozor" drži malo stanje iznad svih ostalih programa (Chrome i Edge na računalu).
+
+NA MOBITELU (senzor na prsima ili kamera)
+Mobitel daje kameru i senzore samo stranicama sa sigurnom adresom (https),
+zato Grbometar ide na GitHub Pages:
+1. Na github.com napravi novi javni repozitorij, npr. "grbometar".
+2. U GitHub Desktopu ga kloniraj, kopiraj u njegovu mapu SVE datoteke iz ove mape,
+   pa Commit to main i Push origin.
+3. Na GitHubu u repozitoriju: Settings -> Pages -> Build and deployment ->
+   Source: Deploy from a branch -> Branch: main, mapa / (root) -> Save.
+4. Za minutu-dvije adresa je: https://TVOJE-KORISNIČKO-IME.github.io/grbometar/
+5. Otvori je u Chromeu na mobitelu -> izbornik (tri točkice) -> Dodaj na početni zaslon / Instaliraj.
+   Nakon prvog pokretanja radi i bez interneta.
+
+SAVJETI
+- Senzor: mobitel u džep košulje ili čvrsto uz prsa, ekranom prema van.
+  Labava odjeća = mobitel visi kao visak i mjerenje laže. Džep hlača mjeri bedro, ne kičmu.
+- Nakon kalibracije ekran se zacrni (džepni način). Za izlaz drži prst 2 sekunde na krugu pri dnu.
+  Kad izvadiš mobitel, mjerenje se pauzira; "Vrati u džep i nastavi" daje 6 sekundi da ga vratiš.
+- Povijest se sprema samo na uređaju i u pregledniku u kojem mjeriš.

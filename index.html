@@ -1,0 +1,1642 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F1F4F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B121C" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Grbometar</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Broji pogrbljenja i ispravljanja preko kamere ili senzora mobitela na prsima.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: ploča za procjenu držanja — mreža s viskom drži živu kralježnicu, očitanja stoje uz nju kao u fizioterapeutovu kartonu. */
+:root {
+  --bg: #F1F4F7;
+  --surface: #FAFBFC;
+  --ink: #132034;
+  --ink-2: #44546B;
+  --muted: #5D6C81;
+  --line: #CBD4DF;
+  --grid: #E7ECF2;
+  --grid-strong: #D3DCE7;
+  --bone: #EFE7D5;
+  --bone-warn: #F4C9AE;
+  --ok: #00876F;
+  --warn: #CF5A1E;
+  --idle: #A3AFBE;
+  --series: #2F5C9E;
+  --warn-wash: rgba(207, 90, 30, .13);
+  --f-display: "Big Shoulders Display", "Arial Narrow", "Roboto Condensed", "Helvetica Neue", sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --r: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0B121C; --surface: #111A26; --ink: #E3E9F1; --ink-2: #A7B4C5; --muted: #8696AA;
+    --line: #2B394A; --grid: #152030; --grid-strong: #1F2D40; --bone: #D6CCB7; --bone-warn: #E39C76;
+    --ok: #1FA387; --warn: #E26A28; --idle: #4A5A6E; --series: #6A93D6;
+    --warn-wash: rgba(226, 106, 40, .18);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0B121C; --surface: #111A26; --ink: #E3E9F1; --ink-2: #A7B4C5; --muted: #8696AA;
+  --line: #2B394A; --grid: #152030; --grid-strong: #1F2D40; --bone: #D6CCB7; --bone-warn: #E39C76;
+  --ok: #1FA387; --warn: #E26A28; --idle: #4A5A6E; --series: #6A93D6;
+  --warn-wash: rgba(226, 106, 40, .18);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; -webkit-text-size-adjust: 100%; }
+h1, h2, h3, p { margin: 0; }
+button, input, select { font: inherit; color: inherit; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 10px 40px; }
+.mono { font-family: var(--f-mono); }
+.small { font-size: 12.5px; }
+.muted { color: var(--muted); }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+:where(button, select, input, summary, [tabindex]):focus-visible { outline: 2px solid var(--series); outline-offset: 2px; }
+
+/* top bar */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 6px 12px; border-bottom: 1px solid var(--line); margin-bottom: 22px; }
+.brand { display: flex; align-items: center; gap: 8px; font-family: var(--f-display); font-weight: 800; font-size: 21px; letter-spacing: .04em; text-transform: uppercase; line-height: 1; }
+.brand svg { width: 16px; height: 22px; flex: none; }
+.top-meta { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px 8px; align-items: center; font-size: 12px; color: var(--ink-2); }
+.tag { font-family: var(--f-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; padding: 2px 8px; border: 1px solid var(--line); border-radius: 99px; white-space: nowrap; }
+.tag-demo { border-color: var(--warn); }
+.note { display: flex; gap: 10px; align-items: baseline; font-size: 13px; color: var(--ink-2); border: 1px solid var(--line); background: var(--surface); padding: 8px 12px; border-radius: var(--r); margin-bottom: 12px; }
+.note .tag { flex: none; }
+
+/* shared pieces */
+.eyebrow { font-family: var(--f-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.display { font-family: var(--f-display); font-weight: 800; text-transform: uppercase; letter-spacing: .01em; text-wrap: balance; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 500; font-size: 14px; line-height: 1.1; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); min-height: 44px; padding: 0 16px; cursor: pointer; text-align: center; }
+.btn:hover { border-color: var(--ink-2); }
+.btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.small { min-height: 34px; padding: 0 12px; font-size: 13px; }
+.linkbtn { background: none; border: 0; padding: 4px 0; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; font-size: 14px; }
+.linkbtn:hover { color: var(--ink); }
+.msg { padding: 10px 12px; border: 1px solid var(--warn); background: var(--warn-wash); border-radius: var(--r); margin: 0 0 16px; max-width: 70ch; }
+.check { display: flex; gap: 10px; align-items: center; cursor: pointer; }
+.check input { width: 18px; height: 18px; accent-color: var(--ink); margin: 0; }
+
+/* posture board: the one loud element */
+.board { position: relative; border: 1px solid var(--line); border-radius: var(--r); background-color: var(--surface);
+  background-image: linear-gradient(var(--grid-strong) 1px, transparent 1px), linear-gradient(90deg, var(--grid-strong) 1px, transparent 1px), linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 48px 48px, 48px 48px, 12px 12px, 12px 12px; background-position: -1px -1px; transition: box-shadow .3s; }
+.board.is-slouch { box-shadow: inset 0 0 0 2px var(--warn); }
+.board.flash { animation: flash 1.3s ease-out 1; }
+@keyframes flash { 0%, 100% { background-color: var(--surface); } 25% { background-color: var(--warn-wash); } }
+.board svg { display: block; width: 100%; height: auto; }
+.spine .plumb { stroke: var(--ink-2); stroke-width: 1; stroke-dasharray: 3 3; }
+.spine .bob { fill: var(--ink-2); }
+.spine .cord { fill: none; stroke: var(--ink-2); stroke-width: 1.2; opacity: .55; }
+.spine .vb rect { fill: var(--bone); stroke: var(--ink); stroke-width: 1; transition: fill .4s; }
+.spine .vb .vb-p { stroke-width: .8; }
+.spine.is-slouch .vb rect { fill: var(--bone-warn); }
+.spine .sacrum { fill: var(--bone); stroke: var(--ink); stroke-width: 1; transition: fill .4s; }
+.spine .head { fill: var(--surface); stroke: var(--ink); stroke-width: 1.5; }
+.spine .eye { fill: var(--ink); }
+.spine .ear { fill: none; stroke: var(--ink); stroke-width: 1.2; }
+.spine .offset { stroke: var(--warn); stroke-width: 2; stroke-linecap: round; }
+.spine .phone { fill: var(--ink); }
+.spine .lbl { font-family: var(--f-mono); font-size: 8.5px; fill: var(--muted); }
+.spine.is-dim .vb, .spine.is-dim .head, .spine.is-dim .sacrum { opacity: .35; }
+
+/* start view */
+.intro { display: grid; grid-template-columns: minmax(0, 1fr) 104px; gap: 16px 18px; align-items: end; margin-bottom: 22px; }
+.intro h1 { font-size: clamp(34px, 8.5vw, 64px); line-height: .95; max-width: 13ch; }
+.lead { font-size: 17px; color: var(--ink-2); max-width: 56ch; margin-top: 14px; }
+.intro-fig { display: grid; gap: 6px; }
+@media (min-width: 760px) { .intro { grid-template-columns: minmax(0, 1fr) 196px; } }
+.intro-fig figcaption { font-family: var(--f-mono); font-size: 10.5px; color: var(--muted); text-align: center; line-height: 1.4; white-space: nowrap; }
+.modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.mode { text-align: left; display: grid; align-content: start; gap: 6px; padding: 16px 18px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); cursor: pointer; }
+.mode:hover { border-color: var(--ink); }
+.mode-title { font-family: var(--f-display); font-weight: 800; font-size: 28px; text-transform: uppercase; letter-spacing: .02em; line-height: 1; display: flex; justify-content: space-between; gap: 12px; }
+.mode-title span:last-child { font-family: var(--f-mono); font-weight: 400; font-size: 18px; }
+.mode-desc { color: var(--ink-2); }
+.mode-meta { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); }
+.demo-row { margin-top: 10px; }
+.block { margin-top: 34px; }
+.block-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; margin-bottom: 10px; }
+.block h2 { font-family: var(--f-display); font-weight: 800; font-size: 25px; text-transform: uppercase; letter-spacing: .02em; line-height: 1; }
+.empty { color: var(--muted); padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.last { margin-bottom: 4px; font-size: 14px; color: var(--ink-2); }
+details.fold { border-top: 1px solid var(--line); padding-top: 12px; }
+details.fold > summary { cursor: pointer; list-style: none; display: flex; align-items: baseline; gap: 10px; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary::after { content: "+"; font-family: var(--f-mono); font-size: 18px; margin-left: auto; color: var(--muted); }
+details.fold[open] > summary::after { content: "\2212"; }
+details.fold > summary h2 { display: inline; }
+.fold-body { padding: 14px 0 4px; }
+.settings { display: grid; gap: 14px; max-width: 560px; }
+.field { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.field select { min-height: 40px; padding: 0 10px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); }
+.danger { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 6px; }
+.help { margin: 0; padding-left: 1.1em; max-width: 70ch; color: var(--ink-2); }
+.help li { margin: 0 0 10px; }
+.help strong { color: var(--ink); font-weight: 600; }
+.foot { margin-top: 40px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
+
+/* readout (shared by start and live views) */
+.readout { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; border-top: 1px solid var(--line); }
+.readout .cell { padding: 10px 12px 12px; border-bottom: 1px solid var(--line); min-width: 0; }
+.readout .cell + .cell { border-left: 1px solid var(--line); }
+.readout .cell:first-child { padding-left: 0; }
+.readout dt { font-family: var(--f-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.readout dd { margin: 0; }
+.readout .num { font-weight: 600; font-size: 34px; line-height: 1.15; letter-spacing: -.01em; }
+.readout .cell-sub { font-size: 12.5px; color: var(--ink-2); }
+.facts { font-size: 13.5px; color: var(--ink-2); margin-top: 10px; }
+@media (max-width: 620px) {
+  .readout { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .readout .cell:nth-child(odd) { border-left: 0; padding-left: 0; }
+  .readout .num { font-size: 30px; }
+}
+
+/* calibration view */
+.calib-grid { display: grid; gap: 22px; }
+@media (min-width: 860px) { .calib-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); align-items: start; } }
+.h-cal { font-size: clamp(30px, 6vw, 46px); line-height: .98; margin: 6px 0 14px; max-width: 16ch; }
+.steps { margin: 0 0 16px; padding-left: 1.3em; max-width: 60ch; }
+.steps li { margin: 0 0 8px; }
+.calstatus { display: flex; gap: 8px; align-items: baseline; min-height: 1.6em; font-weight: 500; margin: 6px 0 16px; }
+.calstatus::before { content: ""; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--idle); transform: translateY(1px); }
+.calstatus.ok::before { background: var(--ok); }
+.calstatus.warn::before { background: var(--warn); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.calib-vis { min-width: 0; }
+.cal-board { max-width: 240px; }
+.camframe { position: relative; width: 100%; aspect-ratio: 4 / 3; background: #000; border-radius: var(--r); overflow: hidden; }
+.camframe video, .camframe canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+.camframe .count { position: absolute; inset: 0; display: grid; place-items: center; font: 800 96px/1 var(--f-display); color: #fff; text-shadow: 0 2px 14px rgba(0, 0, 0, .6); }
+.camframe.park { position: fixed; left: 0; top: 0; width: 4px; height: 3px; opacity: 0; pointer-events: none; border-radius: 0; }
+.preview-slot .camframe { max-width: 260px; margin-top: 12px; }
+
+/* live view */
+.banner { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; border: 1px solid var(--ink-2); border-radius: var(--r); background: var(--surface); padding: 10px 12px; margin-bottom: 16px; font-weight: 500; }
+.hero { display: grid; grid-template-columns: 124px minmax(0, 1fr); grid-template-areas: "board state" "read read"; gap: 18px 16px; align-items: start; }
+.hero > .board { grid-area: board; }
+.hero > .state { grid-area: state; }
+.hero > .hero-read { grid-area: read; min-width: 0; }
+@media (min-width: 760px) { .hero { grid-template-columns: 250px minmax(0, 1fr); grid-template-areas: "board state" "board read"; grid-template-rows: auto 1fr; gap: 22px 32px; } }
+.state { min-width: 0; padding-top: 2px; }
+.state-row { display: flex; align-items: center; gap: 10px; margin: 4px 0 6px; }
+.state-ico { width: 22px; height: 30px; flex: none; }
+.state-ico path { fill: none; stroke: var(--ok); stroke-width: 3; stroke-linecap: round; }
+.state-ico.is-slouch path { stroke: var(--warn); }
+.state-ico.is-idle path { stroke: var(--idle); }
+.state-label { font-size: clamp(32px, 8vw, 66px); line-height: .92; overflow-wrap: anywhere; }
+.state-sub { color: var(--ink-2); font-size: 14.5px; }
+.meter { position: relative; height: 8px; background: var(--grid-strong); border-radius: 99px; margin: 16px 0 8px; max-width: 440px; }
+.meter-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 99px; background: var(--ok); transition: width .25s linear, background-color .25s; }
+.meter-fill.is-slouch { background: var(--warn); }
+.meter-thr { position: absolute; left: 50%; top: -5px; bottom: -5px; width: 2px; margin-left: -1px; background: var(--ink); border-radius: 1px; }
+.reading { font-size: 13px; color: var(--ink-2); }
+.live-readout { margin-top: 4px; }
+.chart { margin-top: 24px; }
+.chart-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; margin-bottom: 8px; }
+.chart h3 { font-family: var(--f-mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); font-weight: 500; }
+.trace-wrap { position: relative; }
+.trace-wrap canvas { display: block; width: 100%; height: 150px; touch-action: pan-y; }
+.tip { position: absolute; z-index: 5; pointer-events: none; background: var(--ink); color: var(--bg); font: 500 12px/1.35 var(--f-mono); padding: 5px 8px; border-radius: 4px; white-space: nowrap; transform: translate(-50%, calc(-100% - 8px)); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; list-style: none; margin: 0; padding: 0; font-size: 12.5px; color: var(--ink-2); }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.sw.ok { background: var(--ok); } .sw.warn { background: var(--warn); } .sw.idle { background: var(--idle); }
+.strip-wrap canvas { display: block; width: 100%; height: 16px; }
+.strip-axis { display: flex; justify-content: space-between; font-family: var(--f-mono); font-size: 11px; color: var(--muted); margin-top: 4px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
+.thr { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 16px; font-size: 14px; }
+.thr input[type="range"] { flex: 1 1 180px; max-width: 320px; accent-color: var(--ink); }
+.thr output { min-width: 3.5ch; font-family: var(--f-mono); }
+
+/* history */
+.hist { position: relative; }
+.hist svg { display: block; width: 100%; height: auto; overflow: visible; }
+.hist .bar { fill: var(--series); }
+.hist .hit { fill: transparent; cursor: pointer; }
+.hist g:focus { outline: none; }
+.hist g:focus-visible .hit { stroke: var(--series); stroke-width: 2; }
+.hist .gl { stroke: var(--grid-strong); stroke-width: 1; }
+.hist .base { stroke: var(--line); stroke-width: 1; }
+.hist .nod { stroke: var(--line); stroke-width: 2; stroke-linecap: round; }
+.hist .ax { font-family: var(--f-mono); font-size: 10.5px; fill: var(--muted); }
+.hist .ax.today { fill: var(--ink); font-weight: 500; }
+.sub { margin-top: 10px; }
+.sub > summary { cursor: pointer; font-size: 13px; color: var(--ink-2); }
+.tablewrap { overflow-x: auto; margin-top: 8px; }
+table { border-collapse: collapse; font-size: 13px; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; padding-left: 0; }
+th { font-family: var(--f-mono); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+
+/* pocket mode: deliberately one look, black for the OLED screen */
+.pocket { position: fixed; inset: 0; z-index: 1000; background: #000; color: #4a4a4a; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 12px; padding: 24px max(16px, env(safe-area-inset-right, 0px)) calc(32px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; font-family: var(--f-mono); text-align: center; }
+.pk-line { font-size: 15px; color: #5a5a5a; }
+.pk-count { font-size: 12px; margin-bottom: 18px; }
+.pk-hold { position: relative; width: 104px; height: 104px; display: grid; place-items: center; font-size: 11px; line-height: 1.3; color: #555; border-radius: 50%; }
+.pk-hold svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.pk-track { fill: none; stroke: #1d1d1d; stroke-width: 3; }
+.pk-ring { fill: none; stroke: #777; stroke-width: 3; stroke-dasharray: 276.5; stroke-dashoffset: 276.5; transform: rotate(-90deg); transform-origin: 50% 50%; }
+
+/* mini window (Document Picture-in-Picture) */
+.pip-body { margin: 0; padding: 0 !important; background: var(--bg); color: var(--ink); font-family: var(--f-body); overflow: hidden; }
+.mini { display: flex; align-items: center; gap: 12px; padding: 12px 16px; height: 100vh; }
+.mini-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--ok); flex: none; }
+.mini.is-slouch .mini-dot { background: var(--warn); }
+.mini.is-idle .mini-dot { background: var(--idle); }
+.mini-state { font-family: var(--f-display); font-weight: 800; font-size: 30px; line-height: 1; text-transform: uppercase; }
+.mini-sub { font-family: var(--f-mono); font-size: 12px; color: var(--ink-2); margin-top: 3px; }
+.mini-counts { margin-left: auto; text-align: right; font-family: var(--f-mono); font-size: 12px; color: var(--ink-2); line-height: 1.5; }
+
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 900; max-width: min(92vw, 520px); background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: var(--r); font-size: 14px; box-shadow: 0 6px 20px rgba(0, 0, 0, .18); opacity: 0; pointer-events: none; transition: opacity .2s; }
+.toast.on { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+</style>
+
+<div class="wrap">
+  <p id="embedNote" class="note" hidden><span class="tag tag-demo">Pregled</span><span>Ovdje su kamera i senzori blokirani, pa se vrti demo sa simuliranim podacima. Pravo mjerenje radi u samostalnoj verziji.</span></p>
+
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 16 22" aria-hidden="true"><g fill="currentColor"><rect x="5" y="18" width="7" height="3.4" rx="1.2"/><rect x="5.6" y="13.6" width="6.4" height="3.2" rx="1.2"/><rect x="4.6" y="9.4" width="6" height="3" rx="1.1"/><rect x="5" y="5.4" width="5.2" height="2.8" rx="1"/></g><circle cx="9.6" cy="2.4" r="2.2" fill="currentColor"/></svg>
+      <span>Grbometar</span>
+    </div>
+    <div class="top-meta">
+      <span id="modeTag" class="tag" hidden></span>
+      <span id="demoTag" class="tag tag-demo" hidden>Demo · 3× brže</span>
+      <span id="sessTime" class="mono" hidden></span>
+    </div>
+  </header>
+
+  <main>
+    <!-- START -->
+    <section id="vStart" aria-labelledby="hMain">
+      <div class="intro">
+        <div>
+          <h1 id="hMain" class="display">Koliko se puta dnevno pogrbiš?</h1>
+          <p class="lead">Grbometar broji pogrbljenja i ispravljanja. Opomena stiže tek kad u grbi ostaneš predugo, ne na svaki pogled u tipkovnicu.</p>
+        </div>
+        <figure class="intro-fig" style="margin:0">
+          <div class="board" id="introBoard"></div>
+          <figcaption id="introCap">0 pogrbljenja<br>0 ispravljanja</figcaption>
+        </figure>
+      </div>
+
+      <p id="startMsg" class="msg" role="alert" hidden></p>
+
+      <div class="modes">
+        <button class="mode" id="btnCam" type="button">
+          <span class="mode-title"><span>Kamera</span><span aria-hidden="true">→</span></span>
+          <span class="mode-desc">Za stolom: laptop, monitor ili mobitel na stalku ispred tebe. Prati spuštanje glave prema ramenima i primicanje ekranu.</span>
+          <span class="mode-meta">Kamera ispred tebe · internet pri prvom pokretanju</span>
+        </button>
+        <button class="mode" id="btnSensor" type="button">
+          <span class="mode-title"><span>Senzor na prsima</span><span aria-hidden="true">→</span></span>
+          <span class="mode-desc">Mobitel u džepu košulje ili čvrsto uz prsa, ekranom prema van. Mjeri nagib prsnog koša u stupnjevima.</span>
+          <span class="mode-meta">Samo mobitel · ekran ostaje upaljen · džep hlača ne vrijedi</span>
+        </button>
+      </div>
+      <p class="demo-row"><button type="button" class="linkbtn" id="btnDemo">Pokreni demo sa simuliranim podacima</button></p>
+
+      <section class="block" aria-labelledby="hToday">
+        <div class="block-head"><h2 id="hToday">Danas</h2><span id="todayNote" class="muted small"></span></div>
+        <p id="lastSess" class="last" hidden></p>
+        <div id="todayBody"></div>
+      </section>
+
+      <section class="block" aria-labelledby="hHist">
+        <div class="block-head"><h2 id="hHist">Zadnjih 14 dana</h2><span id="histNote" class="muted small">udio vremena u uspravnom položaju</span></div>
+        <div id="histChart" class="hist"></div>
+        <details class="sub"><summary>Tablica</summary><div class="tablewrap"><table id="histTable"></table></div></details>
+      </section>
+
+      <details class="block fold">
+        <summary><h2>Postavke</h2></summary>
+        <div class="fold-body settings">
+          <label class="field"><span>Opomena nakon što si u grbi</span>
+            <select id="setDelay"><option value="10">10 s</option><option value="20">20 s</option><option value="30">30 s</option><option value="60">60 s</option></select></label>
+          <label class="field"><span>Podsjetnik za ustajanje</span>
+            <select id="setStand"><option value="0">isključen</option><option value="30">svakih 30 min</option><option value="45">svakih 45 min</option><option value="60">svakih 60 min</option><option value="90">svakih 90 min</option></select></label>
+          <label class="check"><input type="checkbox" id="setSound"> Zvuk opomene</label>
+          <label class="check" id="setVibWrap"><input type="checkbox" id="setVib"> Vibracija</label>
+          <label class="check" id="setVoiceWrap"><input type="checkbox" id="setVoice"> Glasovne upute pri kalibraciji senzora</label>
+          <div class="danger">
+            <button class="btn small" id="btnClear" type="button">Obriši povijest</button>
+            <span id="clearConfirm" hidden>Obrisati sve spremljene dane? <button class="btn small" id="btnClearYes" type="button">Obriši</button> <button class="btn small" id="btnClearNo" type="button">Odustani</button></span>
+          </div>
+        </div>
+      </details>
+
+      <details class="block fold">
+        <summary><h2>Što mjeri, a što ne</h2></summary>
+        <div class="fold-body">
+          <ul class="help">
+            <li><strong>Kamera</strong> gleda oči i ramena. Kad se glava spusti prema ramenima ili se primakneš ekranu, to računa kao pogrbljenje. Slika ne napušta uređaj; model za prepoznavanje tijela jednom se skida s Googleova poslužitelja.</li>
+            <li><strong>Senzor</strong> mjeri nagib prsnog koša, ne kralješke jedan po jedan. Nagib iz kukova s ravnim leđima izgleda mu jednako kao grba. Labava košulja pa mobitel visi kao visak: mjerenje laže.</li>
+            <li><strong>Pogrbljenje</strong> se broji tek kad traje 3 sekunde, pa kratki pogled u tipkovnicu ne ulazi u statistiku. <strong>Ispravljanje</strong> se broji kad se vratiš ispod granice: samostalno ili nakon opomene.</li>
+            <li><strong>Na mobitelu</strong> ekran mora ostati upaljen, a Grbometar otvoren. Web-aplikacija u pozadini ne dobiva podatke senzora. Džepni način zato zacrni ekran i zaključa dodir.</li>
+            <li><strong>Savršen položaj ne postoji.</strong> Više škodi dugo sjedenje u bilo kojem položaju, pa Grbometar podsjeća i na ustajanje.</li>
+            <li><strong>Nije medicinski uređaj.</strong> Bol, trnci ili ukočenost idu liječniku ili fizioterapeutu, ne aplikaciji.</li>
+          </ul>
+        </div>
+      </details>
+    </section>
+
+    <!-- CALIBRATION -->
+    <section id="vCalib" hidden aria-labelledby="calTitle">
+      <div class="calib-grid">
+        <div>
+          <p class="eyebrow" id="calEyebrow">Kalibracija</p>
+          <h2 class="display h-cal" id="calTitle">Pokaži kako izgleda uspravno</h2>
+          <ol class="steps" id="calSteps"></ol>
+          <label class="check" id="calSkipWrap" hidden><input type="checkbox" id="calSkip"> Preskoči drugi položaj (mjerit ću svako odstupanje od uspravnog)</label>
+          <p class="calstatus" id="calStatus" role="status"></p>
+          <div class="actions">
+            <button class="btn primary" id="btnCalGo" type="button">Snimi uspravno</button>
+            <button class="btn" id="btnCalCancel" type="button">Odustani</button>
+          </div>
+        </div>
+        <div class="calib-vis" id="calVis">
+          <div class="board cal-board" id="calBoard" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIVE -->
+    <section id="vLive" hidden aria-label="Praćenje držanja">
+      <div class="banner" id="standBanner" role="alert" hidden><span id="standText"></span><button class="btn small" id="btnStandOk" type="button">U redu</button></div>
+      <div class="hero">
+        <div class="board" id="liveBoard"></div>
+        <div class="state">
+          <p class="eyebrow">Stanje</p>
+          <div class="state-row">
+            <svg class="state-ico" id="stIco" viewBox="0 0 22 30" aria-hidden="true"><path id="stIcoPath" d="M11 3 L11 27"/></svg>
+            <p class="state-label display" id="stLabel">Uspravno</p>
+          </div>
+          <p class="state-sub" id="stSub"></p>
+          <div class="meter" aria-hidden="true"><div class="meter-fill" id="meterFill"></div><div class="meter-thr"></div></div>
+          <p class="reading mono" id="stReading"></p>
+          <div class="preview-slot" id="previewSlot"></div>
+        </div>
+        <div class="hero-read">
+      <dl class="readout live-readout">
+        <div class="cell"><dt>Pogrbljenja</dt><dd class="num" id="cSl">0</dd><dd class="cell-sub" id="cSlSub">u ovoj sesiji</dd></div>
+        <div class="cell"><dt>Ispravljanja</dt><dd class="num" id="cFix">0</dd><dd class="cell-sub" id="cFixSub">sam 0 · na opomenu 0</dd></div>
+        <div class="cell"><dt>Opomene</dt><dd class="num" id="cAl">0</dd><dd class="cell-sub" id="cAlSub"></dd></div>
+        <div class="cell"><dt>Uspravno</dt><dd class="num" id="cUp">–</dd><dd class="cell-sub" id="cUpSub"></dd></div>
+      </dl>
+      <p class="facts" id="facts"></p>
+        </div>
+      </div>
+
+      <section class="chart" aria-labelledby="hTrace">
+        <div class="chart-head"><h3 id="hTrace">Zadnje 2 minute</h3><span class="muted small" id="traceUnit"></span></div>
+        <div class="trace-wrap" id="traceWrap"><canvas id="trace" role="img" aria-label="Krivulja držanja u zadnje dvije minute"></canvas><div class="tip" id="traceTip" hidden></div></div>
+      </section>
+
+      <section class="chart" aria-labelledby="hStrip">
+        <div class="chart-head"><h3 id="hStrip">Cijela sesija</h3>
+          <ul class="legend"><li><i class="sw ok"></i>uspravno</li><li><i class="sw warn"></i>pogrbljeno</li><li><i class="sw idle"></i>pauza, odsutnost, pokret</li></ul></div>
+        <div class="strip-wrap" id="stripWrap"><canvas id="strip" role="img" aria-label="Vremenska traka sesije"></canvas></div>
+        <div class="strip-axis"><span>početak</span><span id="stripEnd"></span></div>
+      </section>
+
+      <div class="controls">
+        <button class="btn" id="btnPause" type="button">Pauza</button>
+        <button class="btn" id="btnRecal" type="button">Nova kalibracija</button>
+        <button class="btn" id="btnPocket" type="button" hidden>Džepni način</button>
+        <button class="btn" id="btnMini" type="button" hidden>Mini prozor</button>
+        <button class="btn" id="btnPreview" type="button" hidden>Prikaži sliku</button>
+        <button class="btn primary" id="btnEnd" type="button">Završi</button>
+      </div>
+      <div class="thr">
+        <label for="thrRange">Granica pogrbljenja</label>
+        <input type="range" id="thrRange" min="5" max="30" step="1" value="12">
+        <output id="thrOut" for="thrRange">12°</output>
+        <span class="muted small">manje = strože</span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">Podaci ostaju na ovom uređaju. Grbometar nije medicinski uređaj.</footer>
+</div>
+
+<div class="pocket" id="pocket" hidden>
+  <p class="pk-line" id="pkLine">Grbometar mjeri</p>
+  <p class="pk-count" id="pkCount"></p>
+  <div class="pk-hold" id="pkHold" role="button" tabindex="0" aria-label="Drži dvije sekunde za izlaz iz džepnog načina">
+    <svg viewBox="0 0 100 100" aria-hidden="true"><circle class="pk-track" cx="50" cy="50" r="44"/><circle class="pk-ring" id="pkRing" cx="50" cy="50" r="44"/></svg>
+    <span>drži<br>2 s</span>
+  </div>
+</div>
+
+<div id="miniHome" hidden>
+  <div class="mini" id="mini">
+    <span class="mini-dot"></span>
+    <div><div class="mini-state" id="miniState">Uspravno</div><div class="mini-sub" id="miniSub"></div></div>
+    <div class="mini-counts" id="miniCounts"></div>
+  </div>
+</div>
+
+<div class="camframe park" id="camFrame">
+  <video id="cam" playsinline muted autoplay></video>
+  <canvas id="ov"></canvas>
+  <div class="count" id="camCount" hidden></div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="vh" id="live" aria-live="polite"></div>
+
+<script>
+(function () {
+'use strict';
+
+/*CORE-START*/
+var Core = (function () {
+  var DEG = 180 / Math.PI;
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function median(a) { if (!a.length) return NaN; var s = a.slice().sort(function (x, y) { return x - y; }); var m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
+  function dot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+  function len(a) { return Math.sqrt(dot(a, a)); }
+  function norm(a) { var l = len(a) || 1; return [a[0] / l, a[1] / l, a[2] / l]; }
+  function sub(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
+  function scale(a, k) { return [a[0] * k, a[1] * k, a[2] * k]; }
+  function mean3(list) { var s = [0, 0, 0]; for (var i = 0; i < list.length; i++) { s[0] += list[i][0]; s[1] += list[i][1]; s[2] += list[i][2]; } return scale(s, 1 / (list.length || 1)); }
+  function angleBetween(a, b) { return Math.acos(clamp(dot(norm(a), norm(b)), -1, 1)) * DEG; }
+  function spreadDeg(list) { if (!list.length) return 0; var m = mean3(list), mx = 0; for (var i = 0; i < list.length; i++) mx = Math.max(mx, angleBetween(list[i], m)); return mx; }
+
+  /* --- phone on the chest: gravity vector maths --- */
+  function sensorCalib(upList, bendList) {
+    var u = norm(mean3(upList));
+    var out = { u: u, f: null, demo: 0, thr: null };
+    if (bendList && bendList.length) {
+      var s = norm(mean3(bendList));
+      out.demo = angleBetween(u, s);
+      if (out.demo >= 5) {
+        var f = sub(s, scale(u, dot(s, u)));
+        if (len(f) > 1e-6) { out.f = norm(f); out.thr = Math.round(clamp(out.demo * 0.5, 6, 25)); }
+      }
+    }
+    return out;
+  }
+  function sensorAngle(cal, g) {
+    var n = norm(g);
+    var total = angleBetween(n, cal.u);
+    var fwd = cal.f ? Math.atan2(dot(n, cal.f), dot(n, cal.u)) * DEG : total;
+    return { total: total, fwd: fwd };
+  }
+
+  /* --- camera: head and shoulders from pose landmarks --- */
+  function camFeatures(lm, W, H) {
+    function P(i) { var p = lm[i]; return p ? { x: p.x * W, y: p.y * H, v: p.visibility == null ? 1 : p.visibility } : null; }
+    var le = P(2), re = P(5), ls = P(11), rs = P(12);
+    if (!le || !re || le.v < 0.5 || re.v < 0.5) return null;
+    var eyeW = Math.hypot(le.x - re.x, le.y - re.y);
+    if (eyeW < 3) return null;
+    var f = { eyeW: eyeW, eyeY: (le.y + re.y) / 2, sh: false };
+    if (ls && rs && ls.v >= 0.5 && rs.v >= 0.5) {
+      var shW = Math.hypot(ls.x - rs.x, ls.y - rs.y);
+      var neckPx = (ls.y + rs.y) / 2 - f.eyeY;
+      if (shW > eyeW * 1.5 && neckPx > 0) { f.sh = true; f.shW = shW; f.neckPx = neckPx; f.neck = neckPx / shW; }
+    }
+    return f;
+  }
+  function camCalib(list) {
+    var ok = list.filter(Boolean);
+    if (ok.length < 5) return null;
+    var withSh = ok.filter(function (f) { return f.sh; });
+    var b = { eyeW: median(ok.map(function (f) { return f.eyeW; })), eyeY: median(ok.map(function (f) { return f.eyeY; })), sh: withSh.length >= ok.length * 0.6 };
+    if (b.sh) { b.neck = median(withSh.map(function (f) { return f.neck; })); b.neckPx = median(withSh.map(function (f) { return f.neckPx; })); }
+    else b.neckPx = b.eyeW * 2.2;
+    return b;
+  }
+  function camDeviation(b, f) {
+    var drop = (b.sh && f.sh) ? (b.neck - f.neck) / b.neck : (f.eyeY - b.eyeY) / b.neckPx;
+    var lean = f.eyeW / b.eyeW - 1;
+    return Math.max(drop, lean * 0.8);
+  }
+
+  /* --- posture state machine: counts bends and straightenings --- */
+  function Posture(o) {
+    this.o = Object.assign({ thr: 12, hyst: 2.4, confirmMs: 3000, releaseMs: 1500, alertDelayMs: 20000, repeatMs: 30000,
+      absentMs: 2500, breakMs: 60000, moveGraceMs: 1500, moveBreakMs: 20000, standMs: 45 * 60000, traceMs: 120000 }, o || {});
+    this.state = 'idle'; this.stateSince = 0; this.pend = null; this.ep = null; this.lastT = null; this.lastM = null;
+    this.absentSince = null; this.movingSince = null; this.paused = false; this.pausedAt = 0;
+    this.c = { slouches: 0, selfFix: 0, alertFix: 0, alerts: 0, stands: 0, uprightMs: 0, slouchMs: 0, idleMs: 0, longestMs: 0, sitMs: 0 };
+    this.nextStandAt = this.o.standMs;
+    this.segs = []; this.trace = [];
+  }
+  Posture.prototype.setOpts = function (o) {
+    var prevStand = this.o.standMs;
+    Object.assign(this.o, o);
+    if (o.standMs !== undefined && o.standMs !== prevStand) this.nextStandAt = Math.max(o.standMs, this.c.sitMs + 1);
+  };
+  Posture.prototype.setState = function (s, t) {
+    if (this.state === s) return;
+    var last = this.segs[this.segs.length - 1];
+    if (last && last.t1 == null) last.t1 = Math.max(last.t0, t);
+    this.segs.push({ s: s, t0: last ? last.t1 : t, t1: null });
+    this.state = s; this.stateSince = t;
+  };
+  Posture.prototype.accrue = function (dt) {
+    if (this.state === 'upright') this.c.uprightMs += dt;
+    else if (this.state === 'slouch') this.c.slouchMs += dt;
+    if (this.state === 'upright' || this.state === 'slouch') this.c.sitMs += dt;
+  };
+  Posture.prototype.endEpisode = function (now) {
+    if (this.state === 'slouch' && this.ep) { var d = now - this.ep.start; if (d > this.c.longestMs) this.c.longestMs = d; }
+    this.ep = null;
+  };
+  Posture.prototype.breakTaken = function () { this.c.sitMs = 0; this.nextStandAt = this.o.standMs; };
+  Posture.prototype.pause = function (now) {
+    if (this.paused) return;
+    this.endEpisode(now); this.pend = null; this.setState('paused', now);
+    this.paused = true; this.pausedAt = now;
+  };
+  Posture.prototype.resume = function (now) {
+    if (!this.paused) return;
+    this.paused = false;
+    if (now - this.pausedAt >= this.o.breakMs * 2) this.breakTaken();
+    this.lastT = now; this.absentSince = null; this.movingSince = null;
+  };
+  Posture.prototype.pushTrace = function (now, m) {
+    this.trace.push({ t: now, m: m, s: this.state });
+    var cut = now - this.o.traceMs;
+    while (this.trace.length > 2 && this.trace[0].t < cut) this.trace.shift();
+  };
+  Posture.prototype.update = function (now, smp) {
+    var ev = [], o = this.o, c = this.c;
+    var dt = this.lastT == null ? 0 : clamp(now - this.lastT, 0, 2000);
+    this.lastT = now;
+    if (this.paused) { c.idleMs += dt; this.pushTrace(now, null); return ev; }
+    if (!smp || !smp.present) {
+      if (this.absentSince == null) this.absentSince = now;
+      if (this.state !== 'absent') {
+        if (now - this.absentSince >= o.absentMs) {
+          this.endEpisode(now); this.pend = null;
+          this.setState('absent', this.absentSince); ev.push('absent');
+        } else this.accrue(dt);
+      }
+      if (this.state === 'absent') { c.idleMs += dt; if (now - this.absentSince >= o.breakMs) this.breakTaken(); }
+      this.pushTrace(now, null);
+      return ev;
+    }
+    this.absentSince = null;
+    if (smp.moving) {
+      if (this.movingSince == null) this.movingSince = now;
+      if (this.state !== 'moving') {
+        if (now - this.movingSince < o.moveGraceMs) { this.accrue(dt); this.pushTrace(now, null); return ev; }
+        this.endEpisode(now); this.pend = null; this.setState('moving', this.movingSince); ev.push('moving');
+      }
+      c.idleMs += dt;
+      if (now - this.movingSince >= o.moveBreakMs) this.breakTaken();
+      this.pushTrace(now, null);
+      return ev;
+    }
+    this.movingSince = null;
+    if (this.state === 'idle' || this.state === 'absent' || this.state === 'moving' || this.state === 'paused') {
+      if (this.state === 'absent') ev.push('back');
+      this.setState('upright', now); this.pend = null; dt = 0;
+    }
+    var m = smp.m, thr = o.thr, h = o.hyst;
+    this.lastM = m;
+    this.accrue(dt);
+    if (o.standMs > 0 && c.sitMs >= this.nextStandAt) { c.stands++; this.nextStandAt = c.sitMs + o.standMs; ev.push('stand'); }
+    if (this.state === 'upright') {
+      if (m > thr) {
+        if (this.pend == null) this.pend = now;
+        if (now - this.pend >= o.confirmMs) {
+          var back = now - this.pend;
+          c.uprightMs = Math.max(0, c.uprightMs - back); c.slouchMs += back;
+          this.ep = { start: this.pend, alerted: false, nextAlertAt: this.pend + o.alertDelayMs };
+          this.setState('slouch', this.pend); this.pend = null;
+          c.slouches++; ev.push('slouch');
+        }
+      } else this.pend = null;
+    }
+    if (this.state === 'slouch' && this.ep) {
+      if (now >= this.ep.nextAlertAt && m > thr - h) { c.alerts++; this.ep.alerted = true; this.ep.nextAlertAt = now + o.repeatMs; ev.push('alert'); }
+      if (m < thr - h) {
+        if (this.pend == null) this.pend = now;
+        if (now - this.pend >= o.releaseMs) {
+          var back2 = now - this.pend, tFix = this.pend;
+          c.slouchMs = Math.max(0, c.slouchMs - back2); c.uprightMs += back2;
+          var dur = tFix - this.ep.start;
+          if (dur > c.longestMs) c.longestMs = dur;
+          if (this.ep.alerted) { c.alertFix++; ev.push('fix-alert'); } else { c.selfFix++; ev.push('fix-self'); }
+          this.ep = null; this.pend = null;
+          this.setState('upright', tFix);
+        }
+      } else this.pend = null;
+    }
+    this.pushTrace(now, m);
+    return ev;
+  };
+  Posture.prototype.info = function (now) {
+    var s = this.state, ep = this.ep;
+    return {
+      state: s, m: this.lastM,
+      slouchFor: s === 'slouch' && ep ? now - ep.start : 0,
+      uprightFor: s === 'upright' ? now - this.stateSince : 0,
+      alerted: !!(ep && ep.alerted),
+      nextAlertIn: ep ? Math.max(0, ep.nextAlertAt - now) : 0
+    };
+  };
+
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function fmtClock(ms) { var s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = s % 60; return h ? h + ':' + pad2(m) + ':' + pad2(ss) : m + ':' + pad2(ss); }
+  function fmtMin(ms) { if (ms < 60000) return '<1 min'; var mins = Math.round(ms / 60000); if (mins < 60) return mins + ' min'; var h = Math.floor(mins / 60), m = mins % 60; return h + ' h' + (m ? ' ' + pad2(m) + ' min' : ''); }
+  function plural(n, one, few, many) { var a = Math.abs(n) % 10, b = Math.abs(n) % 100; if (a === 1 && b !== 11) return one; if (a >= 2 && a <= 4 && (b < 12 || b > 14)) return few; return many; }
+  function dayKey(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  function pct(a, b) { var t = a + b; return t > 0 ? Math.round(a / t * 100) : null; }
+
+  return { clamp: clamp, median: median, norm: norm, angleBetween: angleBetween, spreadDeg: spreadDeg, mean3: mean3,
+    sensorCalib: sensorCalib, sensorAngle: sensorAngle, camFeatures: camFeatures, camCalib: camCalib, camDeviation: camDeviation,
+    Posture: Posture, fmtClock: fmtClock, fmtMin: fmtMin, plural: plural, dayKey: dayKey, pct: pct, DEG: DEG };
+})();
+/*CORE-END*/
+
+/* ------------------------------------------------------------------ */
+var $ = function (id) { return document.getElementById(id); };
+var E = {};
+['embedNote', 'modeTag', 'demoTag', 'sessTime', 'vStart', 'vCalib', 'vLive', 'introBoard', 'introCap', 'startMsg', 'btnCam', 'btnSensor', 'btnDemo',
+ 'todayNote', 'lastSess', 'todayBody', 'histChart', 'histNote', 'histTable', 'setDelay', 'setStand', 'setSound', 'setVib', 'setVibWrap', 'setVoice', 'setVoiceWrap',
+ 'btnClear', 'clearConfirm', 'btnClearYes', 'btnClearNo', 'calEyebrow', 'calTitle', 'calSteps', 'calSkipWrap', 'calSkip', 'calStatus', 'btnCalGo', 'btnCalCancel',
+ 'calVis', 'calBoard', 'standBanner', 'standText', 'btnStandOk', 'liveBoard', 'stIco', 'stIcoPath', 'stLabel', 'stSub', 'meterFill', 'stReading', 'previewSlot',
+ 'cSl', 'cSlSub', 'cFix', 'cFixSub', 'cAl', 'cAlSub', 'cUp', 'cUpSub', 'facts', 'traceUnit', 'traceWrap', 'trace', 'traceTip', 'stripWrap', 'strip', 'stripEnd',
+ 'btnPause', 'btnRecal', 'btnPocket', 'btnMini', 'btnPreview', 'btnEnd', 'thrRange', 'thrOut', 'pocket', 'pkLine', 'pkCount', 'pkHold', 'pkRing',
+ 'miniHome', 'mini', 'miniState', 'miniSub', 'miniCounts', 'camFrame', 'cam', 'ov', 'camCount', 'toast', 'live'].forEach(function (id) { E[id] = $(id); });
+
+var EMBED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
+var REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+var MP_VER = '0.10.35';
+var MP_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@' + MP_VER + '/vision_bundle.mjs';
+var MP_WASM = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@' + MP_VER + '/wasm';
+var MODEL_URLS = [
+  'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task',
+  'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task'
+];
+var NBSP = ' ';
+
+function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+/* ---------- storage ---------- */
+var store = {
+  get: function (k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+var K_SET = 'grbometar.v1.settings', K_DAYS = 'grbometar.v1.days';
+var S = Object.assign({ alertDelay: 20, standMin: 45, sound: true, vibrate: true, voice: true, thrSensor: 12, thrCam: 12 }, store.get(K_SET, {}));
+function saveSettings() { store.set(K_SET, S); }
+
+/* ---------- app state ---------- */
+var A = { mode: null, phase: 'start', posture: null, cal: null, smooth: null, sessStart: 0, lastSave: 0, saved: null, counted: null,
+  pocket: false, clock: function () { return performance.now(); }, busy: false, calRun: null, demoHist: null, lastSummary: null,
+  pausedFromPocket: false, resumeTimer: null, wantAwake: false, hiddenAt: null, lastStrip: 0, hover: null, preview: false };
+function realClock() { return performance.now(); }
+
+/* ---------- sound, vibration, voice ---------- */
+var actx = null;
+function audioInit() {
+  try { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) { actx = null; }
+}
+function tone(f, t, d, v) {
+  var o = actx.createOscillator(), g = actx.createGain();
+  o.type = 'sine'; o.frequency.value = f;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+  o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + d + 0.05);
+}
+function chime(kind, force) {
+  if (!actx || (!S.sound && !force)) return;
+  try {
+    if (actx.state === 'suspended') actx.resume();
+    var t = actx.currentTime + 0.03;
+    if (kind === 'alert') { tone(523, t, 0.22, 0.28); tone(784, t + 0.2, 0.36, 0.28); }
+    else if (kind === 'stand') { tone(523, t, 0.16, 0.24); tone(659, t + 0.18, 0.16, 0.24); tone(784, t + 0.36, 0.3, 0.24); }
+    else if (kind === 'beep') tone(880, t, 0.12, 0.22);
+    else if (kind === 'double') { tone(880, t, 0.1, 0.22); tone(880, t + 0.2, 0.1, 0.22); }
+    else if (kind === 'triple') { tone(880, t, 0.09, 0.22); tone(988, t + 0.17, 0.09, 0.22); tone(1175, t + 0.34, 0.16, 0.22); }
+    else if (kind === 'low') tone(220, t, 0.35, 0.26);
+    else if (kind === 'tick') tone(1320, t, 0.04, 0.12);
+  } catch (e) {}
+}
+function buzz(p) { if (!S.vibrate || !navigator.vibrate) return; try { navigator.vibrate(p); } catch (e) {} }
+var voice = null;
+function voicesInit() {
+  if (!('speechSynthesis' in window)) return;
+  var pick = function () {
+    var vs = speechSynthesis.getVoices() || [];
+    voice = vs.find(function (v) { return /^hr/i.test(v.lang); }) || vs.find(function (v) { return /^(bs|sr)/i.test(v.lang); }) || null;
+  };
+  pick(); try { speechSynthesis.addEventListener('voiceschanged', pick); } catch (e) {}
+}
+function speak(text) {
+  if (!S.voice || !voice) return;
+  try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(text); u.voice = voice; u.lang = voice.lang; speechSynthesis.speak(u); } catch (e) {}
+}
+
+/* ---------- misc UI ---------- */
+var toastT = null;
+function toast(msg) { E.toast.textContent = msg; E.toast.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(function () { E.toast.classList.remove('on'); }, 3800); }
+function announce(msg) { E.live.textContent = msg; }
+function showView(id) { ['vStart', 'vCalib', 'vLive'].forEach(function (v) { E[v].hidden = v !== id; }); try { window.scrollTo(0, 0); } catch (e) {} }
+function startMsg(t) { E.startMsg.textContent = t; E.startMsg.hidden = !t; }
+function setCalStatus(t, kind) { E.calStatus.textContent = t; E.calStatus.className = 'calstatus' + (kind ? ' ' + kind : ''); }
+function unitOf(mode) { return mode === 'cam' ? NBSP + '%' : '°'; }
+
+/* ---------- wake lock ---------- */
+var wl = null;
+function keepAwake(on) {
+  A.wantAwake = on;
+  if (!on) { if (wl) { try { wl.release(); } catch (e) {} wl = null; } return; }
+  if (wl || !('wakeLock' in navigator) || document.visibilityState !== 'visible') return;
+  navigator.wakeLock.request('screen').then(function (l) { wl = l; l.addEventListener('release', function () { wl = null; }); }).catch(function () {});
+}
+
+/* ---------- ticker (worker keeps time in background tabs) ---------- */
+var ticker = null, tickTimer = null;
+function startTicker() {
+  stopTicker();
+  try {
+    var src = 'var i=null;onmessage=function(e){clearInterval(i);if(e.data>0)i=setInterval(function(){postMessage(1)},e.data)}';
+    ticker = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+    ticker.onmessage = loop; ticker.postMessage(250);
+  } catch (e) { ticker = null; tickTimer = setInterval(loop, 250); }
+}
+function stopTicker() {
+  if (ticker) { try { ticker.postMessage(0); ticker.terminate(); } catch (e) {} ticker = null; }
+  if (tickTimer) { clearInterval(tickTimer); tickTimer = null; }
+}
+function loop() {
+  if (A.busy) return;
+  A.busy = true;
+  step().catch(function (e) { console.error(e); }).then(function () { A.busy = false; });
+}
+async function step() {
+  if (!A.mode) return;
+  var now = A.clock(), smp = null;
+  if (A.mode === 'sensor') smp = Sensor.sample();
+  else if (A.mode === 'cam') smp = await Cam.sample();
+  else if (A.mode === 'demo') smp = Demo.sample(now);
+  if (A.phase === 'calib') { calibTick(smp); return; }
+  if (A.phase !== 'live' || !A.posture) return;
+  var ev = A.posture.update(now, smp);
+  for (var i = 0; i < ev.length; i++) onEvent(ev[i]);
+  render(now);
+  maybeSave(now, false);
+}
+
+/* ---------- phone sensor ---------- */
+var Sensor = {
+  g: null, last: 0, ms2: 0, on: false,
+  handler: function (e) {
+    var a = e.accelerationIncludingGravity;
+    if (!a || a.x == null || a.y == null || a.z == null) return;
+    var t = performance.now(), dt = Sensor.last ? Math.min(0.25, (t - Sensor.last) / 1000) : 0.016;
+    Sensor.last = t;
+    var raw = [a.x, a.y, a.z];
+    if (!Sensor.g) { Sensor.g = raw.slice(); return; }
+    var k = 1 - Math.exp(-dt / 0.5);
+    for (var i = 0; i < 3; i++) Sensor.g[i] += k * (raw[i] - Sensor.g[i]);
+    var lx = raw[0] - Sensor.g[0], ly = raw[1] - Sensor.g[1], lz = raw[2] - Sensor.g[2];
+    Sensor.ms2 += (1 - Math.exp(-dt / 1.0)) * ((lx * lx + ly * ly + lz * lz) - Sensor.ms2);
+  },
+  start: async function () {
+    if (typeof DeviceMotionEvent === 'undefined') throw new Error('nosensor');
+    var perm = 'granted';
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+      try { perm = await DeviceMotionEvent.requestPermission(); } catch (e) { perm = 'error'; }
+    }
+    this.g = null; this.last = 0; this.ms2 = 0;
+    window.addEventListener('devicemotion', this.handler);
+    this.on = true;
+    var t0 = performance.now();
+    while (performance.now() - t0 < 2500) { if (this.g) return; await wait(100); }
+    this.stop();
+    throw new Error(perm === 'granted' ? 'nodata' : 'denied');
+  },
+  stop: function () { window.removeEventListener('devicemotion', this.handler); this.on = false; },
+  fresh: function () { return !!this.g && performance.now() - this.last < 1500; },
+  sample: function () {
+    if (!this.fresh() || !A.cal) return { present: false };
+    var ang = Core.sensorAngle(A.cal, this.g);
+    return { present: true, moving: Math.sqrt(this.ms2) > 1.2, m: A.cal.f ? ang.fwd : ang.total };
+  }
+};
+
+/* ---------- camera + MediaPipe pose ---------- */
+var Cam = {
+  stream: null, track: null, ic: null, lm: null, lastTs: 0, icFails: 0, frames: 0,
+  start: async function (onStatus) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { var er = new Error('nocamera'); er.name = window.isSecureContext === false ? 'Insecure' : 'NoCamera'; throw er; }
+    this.stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 15, max: 30 } } });
+    this.track = this.stream.getVideoTracks()[0];
+    E.cam.srcObject = this.stream;
+    try { await E.cam.play(); } catch (e) {}
+    this.ic = null; this.icFails = 0;
+    if ('ImageCapture' in window) { try { this.ic = new ImageCapture(this.track); } catch (e) { this.ic = null; } }
+    if (!this.lm) {
+      if (onStatus) onStatus('model');
+      var mp;
+      try { mp = await import(MP_URL); } catch (e) { var e1 = new Error('model'); e1.name = 'ModelError'; throw e1; }
+      var fs = await mp.FilesetResolver.forVisionTasks(MP_WASM);
+      var lastErr = null;
+      outer:
+      for (var u = 0; u < MODEL_URLS.length; u++) {
+        for (var d = 0; d < 2; d++) {
+          try {
+            this.lm = await mp.PoseLandmarker.createFromOptions(fs, { baseOptions: { modelAssetPath: MODEL_URLS[u], delegate: d ? 'CPU' : 'GPU' }, runningMode: 'VIDEO', numPoses: 1 });
+            break outer;
+          } catch (e) { lastErr = e; console.warn('PoseLandmarker', d ? 'CPU' : 'GPU', e); }
+        }
+      }
+      if (!this.lm) { var e2 = new Error(String(lastErr)); e2.name = 'ModelError'; throw e2; }
+    }
+  },
+  grab: async function () {
+    if (this.ic && this.track && this.track.readyState === 'live' && !this.track.muted) {
+      try {
+        var bmp = await Promise.race([this.ic.grabFrame(), wait(1500).then(function () { throw new Error('timeout'); })]);
+        this.icFails = 0;
+        return { src: bmp, w: bmp.width, h: bmp.height, close: true };
+      } catch (e) { if (++this.icFails > 3) this.ic = null; }
+    }
+    var v = E.cam;
+    if (v.readyState >= 2 && v.videoWidth) return { src: v, w: v.videoWidth, h: v.videoHeight, close: false };
+    return null;
+  },
+  sample: async function () {
+    if (!this.lm) return { present: false };
+    var fr = await this.grab();
+    if (!fr) return { present: false };
+    var ts = performance.now(); if (ts <= this.lastTs) ts = this.lastTs + 1; this.lastTs = ts;
+    var res = null;
+    try { res = this.lm.detectForVideo(fr.src, ts); } catch (e) { console.warn(e); }
+    finally { if (fr.close && fr.src.close) fr.src.close(); }
+    this.frames++;
+    var lm = res && res.landmarks && res.landmarks[0];
+    var f = lm ? Core.camFeatures(lm, fr.w, fr.h) : null;
+    drawOverlay(lm, fr.w, fr.h, f);
+    if (!f) { A.smooth = null; return { present: false, f: null }; }
+    if (!A.cal) return { present: true, f: f, m: 0 };
+    var d = Core.camDeviation(A.cal, f) * 100;
+    A.smooth = A.smooth == null ? d : A.smooth + 0.4 * (d - A.smooth);
+    return { present: true, f: f, m: A.smooth };
+  },
+  stop: function () {
+    if (this.stream) this.stream.getTracks().forEach(function (t) { t.stop(); });
+    this.stream = null; this.track = null; this.ic = null; E.cam.srcObject = null;
+  }
+};
+function placeCam(where) {
+  var fr = E.camFrame;
+  if (where === 'calib') { E.calVis.insertBefore(fr, E.calVis.firstChild); fr.classList.remove('park'); }
+  else if (where === 'live') { E.previewSlot.appendChild(fr); fr.classList.remove('park'); }
+  else { document.body.appendChild(fr); fr.classList.add('park'); }
+  var p = E.cam.play(); if (p && p.catch) p.catch(function () {});
+}
+function drawOverlay(lm, w, h, f) {
+  var cv = E.ov;
+  if (E.camFrame.classList.contains('park')) return;
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  var ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, w, h);
+  if (!lm) return;
+  var col = A.posture && A.posture.state === 'slouch' ? cssVar('--warn') : cssVar('--ok');
+  var P = function (i) { return [lm[i].x * w, lm[i].y * h]; };
+  var vis = function (i) { return lm[i] && (lm[i].visibility == null || lm[i].visibility > 0.5); };
+  ctx.lineWidth = Math.max(2, w / 220); ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineCap = 'round';
+  if (f && f.sh) {
+    var a = P(11), b = P(12), e1 = P(2), e2 = P(5);
+    var sm = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], em = [(e1[0] + e2[0]) / 2, (e1[1] + e2[1]) / 2];
+    ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.moveTo(sm[0], sm[1]); ctx.lineTo(em[0], em[1]); ctx.stroke();
+  }
+  [0, 2, 5, 7, 8, 11, 12].forEach(function (i) { if (!vis(i)) return; var p = P(i); ctx.beginPath(); ctx.arc(p[0], p[1], Math.max(3, w / 130), 0, Math.PI * 2); ctx.fill(); });
+}
+
+/* ---------- demo (simulated sensor, 3x speed) ---------- */
+var Demo = {
+  eps: [], walk: null, seed: 7,
+  rnd: function () { this.seed = (this.seed * 16807) % 2147483647; return (this.seed - 1) / 2147483646; },
+  init: function () {
+    this.seed = 7;
+    var t = 25000, eps = [];
+    while (t < 8 * 3600e3) {
+      var dur = 4500 + Math.pow(this.rnd(), 1.5) * 52000;
+      eps.push({ a: t, b: t + dur, peak: 15 + this.rnd() * 11 });
+      t += dur + 22000 + this.rnd() * 75000;
+    }
+    this.eps = eps; this.walk = { a: 9.3 * 60000, b: 9.3 * 60000 + 50000 };
+  },
+  sample: function (t) {
+    if (t >= this.walk.a && t < this.walk.b) return { present: true, moving: true, m: null };
+    var base = 4.5 + 1.8 * Math.sin(t / 23000) + (this.rnd() - 0.5) * 1.4, m = base;
+    for (var i = 0; i < this.eps.length; i++) {
+      var e = this.eps[i];
+      if (e.a > t) break;
+      if (t < e.b + 2500) { var k = Math.max(0, Math.min((t - e.a) / 2500, t > e.b ? 1 - (t - e.b) / 2500 : 1, 1)); m = base + (e.peak - base) * k; }
+    }
+    return { present: true, moving: false, m: m };
+  }
+};
+function makeDemoHist() {
+  var out = {}, d = new Date();
+  for (var i = 13; i >= 0; i--) {
+    if (i === 9 || i === 4) continue;
+    var dd = new Date(d.getFullYear(), d.getMonth(), d.getDate() - i), p = (13 - i) / 13;
+    var hours = 2.2 + ((i * 7) % 5) * 0.45, tot = hours * 3600e3;
+    var share = Math.min(0.9, 0.57 + p * 0.23 + (((i * 13) % 7) - 3) * 0.012);
+    var s = Math.round(40 - p * 21 + ((i * 5) % 6)), a = Math.max(1, Math.round(15 - p * 11 + ((i * 3) % 3)));
+    var fa = Math.min(s, Math.round(a * 0.85));
+    out[Core.dayKey(dd)] = { s: s, fs: Math.max(0, s - fa - 1), fa: fa, a: a, up: tot * share, sl: tot * (1 - share), lg: (55 + (i * 17) % 95) * 1000, n: 2 + (i % 2), st: Math.round(hours * 60 / 45) };
+  }
+  return out;
+}
+
+/* ---------- spine figure ---------- */
+var SP_U = [[96, 290], [106, 262], [103, 232], [89, 183], [94, 130], [102, 106], [100, 88]];
+var SP_K = [[91, 290], [86, 263], [84, 233], [93, 190], [115, 148], [131, 130], [140, 114]];
+var HEAD_U = [107, 60], HEAD_K = [157, 89];
+var SAC_U = [[83, 289], [109, 288], [102, 306], [89, 307]];
+var SAC_K = [[79, 291], [104, 285], [101, 304], [86, 309]];
+var PLUMB_X = 102;
+var SPINE_SVG = '<svg viewBox="0 0 200 320" class="spine" role="img" aria-label="Kralježnica sa strane, glava gleda udesno">' +
+  '<line class="plumb" x1="' + PLUMB_X + '" y1="14" x2="' + PLUMB_X + '" y2="305"/>' +
+  '<path class="bob" d="M' + (PLUMB_X - 4) + ' 305 L' + (PLUMB_X + 4) + ' 305 L' + PLUMB_X + ' 315 Z"/>' +
+  '<text class="lbl" x="' + (PLUMB_X + 5) + '" y="12">visak</text>' +
+  '<path class="cord"/><polygon class="sacrum"/><g class="vert"></g>' +
+  '<line class="offset"/><rect class="phone" width="6" height="26" rx="2" visibility="hidden"/>' +
+  '<circle class="head" r="21"/><circle class="eye" r="1.7"/><circle class="ear" r="3.2"/>' +
+  '<text class="lbl lbl-l" text-anchor="end">L1–L5</text><text class="lbl lbl-t" text-anchor="end">T1–T12</text><text class="lbl lbl-c" text-anchor="end">C1–C7</text>' +
+  '<text class="lbl" x="196" y="316" text-anchor="end">naprijed →</text></svg>';
+function lerpPt(p, q, s) { return [p[0] + (q[0] - p[0]) * s, p[1] + (q[1] - p[1]) * s]; }
+function ctrl(pts, i) {
+  var p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+  return [p1, [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6], [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6], p2];
+}
+function bez(c, t) { var u = 1 - t; return [u * u * u * c[0][0] + 3 * u * u * t * c[1][0] + 3 * u * t * t * c[2][0] + t * t * t * c[3][0], u * u * u * c[0][1] + 3 * u * u * t * c[1][1] + 3 * u * t * t * c[2][1] + t * t * t * c[3][1]]; }
+function sampleSpline(pts, a, b, n) { var out = []; for (var i = a; i < b; i++) { var c = ctrl(pts, i); for (var k = 0; k < n; k++) out.push(bez(c, k / n)); } out.push(pts[b]); return out; }
+function polyLen(poly) { var L = 0; for (var i = 1; i < poly.length; i++) L += Math.hypot(poly[i][0] - poly[i - 1][0], poly[i][1] - poly[i - 1][1]); return L; }
+function along(poly, total, frac) {
+  var L = total * frac, acc = 0;
+  for (var i = 1; i < poly.length; i++) {
+    var dx = poly[i][0] - poly[i - 1][0], dy = poly[i][1] - poly[i - 1][1], d = Math.hypot(dx, dy);
+    if (acc + d >= L || i === poly.length - 1) { var t = d ? Core.clamp((L - acc) / d, 0, 1) : 0; return { x: poly[i - 1][0] + dx * t, y: poly[i - 1][1] + dy * t, tx: dx / (d || 1), ty: dy / (d || 1) }; }
+    acc += d;
+  }
+  return { x: poly[0][0], y: poly[0][1], tx: 0, ty: -1 };
+}
+function cubicPath(pts) { var d = 'M' + pts[0][0].toFixed(1) + ' ' + pts[0][1].toFixed(1); for (var i = 0; i < pts.length - 1; i++) { var c = ctrl(pts, i); d += 'C' + c[1][0].toFixed(1) + ' ' + c[1][1].toFixed(1) + ' ' + c[2][0].toFixed(1) + ' ' + c[2][1].toFixed(1) + ' ' + c[3][0].toFixed(1) + ' ' + c[3][1].toFixed(1); } return d; }
+function attrs(el, o) { for (var k in o) el.setAttribute(k, typeof o[k] === 'number' ? o[k].toFixed(2) : o[k]); }
+function makeSpine(host, withPhone) {
+  host.innerHTML = SPINE_SVG;
+  var svg = host.querySelector('svg'), NS = 'http://www.w3.org/2000/svg';
+  var q = function (s) { return svg.querySelector(s); };
+  var vg = q('.vert'), cord = q('.cord'), sac = q('.sacrum'), head = q('.head'), eye = q('.eye'), ear = q('.ear'), off = q('.offset'), phone = q('.phone');
+  var lbls = [q('.lbl-l'), q('.lbl-t'), q('.lbl-c')];
+  var REG = [{ a: 0, b: 2, n: 5, w0: 22, w1: 19.5 }, { a: 2, b: 4, n: 12, w0: 18.5, w1: 13 }, { a: 4, b: 6, n: 7, w0: 12, w1: 10 }];
+  var vbs = [];
+  REG.forEach(function (r) { for (var k = 0; k < r.n; k++) { var g = document.createElementNS(NS, 'g'); g.setAttribute('class', 'vb'); var pr = document.createElementNS(NS, 'rect'); pr.setAttribute('class', 'vb-p'); var bd = document.createElementNS(NS, 'rect'); g.appendChild(pr); g.appendChild(bd); vg.appendChild(g); vbs.push({ g: g, bd: bd, pr: pr }); } });
+  if (withPhone) phone.removeAttribute('visibility');
+  var lastS = -1;
+  function draw(s, cls) {
+    if (cls !== undefined) svg.setAttribute('class', 'spine' + (cls ? ' ' + cls : ''));
+    if (Math.abs(s - lastS) < 0.0005) return;
+    lastS = s;
+    var pts = SP_U.map(function (p, i) { return lerpPt(p, SP_K[i], s); });
+    cord.setAttribute('d', cubicPath(pts));
+    var idx = 0;
+    REG.forEach(function (r, ri) {
+      var poly = sampleSpline(pts, r.a, r.b, 14), L = polyLen(poly), seg = L / r.n;
+      for (var k = 0; k < r.n; k++) {
+        var at = along(poly, L, (k + 0.5) / r.n), w = r.w0 + (r.w1 - r.w0) * (k / Math.max(1, r.n - 1)), h = seg * 0.74;
+        var ang = Math.atan2(at.ty, at.tx) * Core.DEG + 90, o = vbs[idx++];
+        o.g.setAttribute('transform', 'translate(' + at.x.toFixed(2) + ' ' + at.y.toFixed(2) + ') rotate(' + ang.toFixed(2) + ')');
+        attrs(o.bd, { x: -w / 2, y: -h / 2, width: w, height: h, rx: Math.min(2.4, h / 2.4) });
+        var pw = w * 0.36, ph = h * 0.46;
+        attrs(o.pr, { x: -w / 2 - pw + 1.5, y: -ph / 2 + h * 0.12, width: pw, height: ph, rx: ph / 2.4 });
+      }
+      var mid = along(poly, L, 0.5);
+      var lo = r.w0 / 2 + 10; lbls[ri].setAttribute('x', (mid.x + mid.ty * lo).toFixed(1)); lbls[ri].setAttribute('y', (mid.y - mid.tx * lo + 3).toFixed(1));
+      if (ri === 1 && withPhone) {
+        var pa = along(poly, L, 0.78), pang = Math.atan2(pa.ty, pa.tx) * Core.DEG + 90;
+        phone.setAttribute('transform', 'translate(' + pa.x.toFixed(2) + ' ' + pa.y.toFixed(2) + ') rotate(' + pang.toFixed(2) + ') translate(' + (r.w0 / 2 + 4) + ' -13)');
+      }
+    });
+    var hc = lerpPt(HEAD_U, HEAD_K, s);
+    attrs(head, { cx: hc[0], cy: hc[1] }); attrs(eye, { cx: hc[0] + 11, cy: hc[1] - 3 });
+    var ex = hc[0] - 5, ey = hc[1] + 3; attrs(ear, { cx: ex, cy: ey });
+    sac.setAttribute('points', SAC_U.map(function (p, i) { var x = lerpPt(p, SAC_K[i], s); return x[0].toFixed(1) + ',' + x[1].toFixed(1); }).join(' '));
+    if (s > 0.12) { attrs(off, { x1: PLUMB_X, y1: ey, x2: ex - 3.5, y2: ey }); off.removeAttribute('visibility'); } else off.setAttribute('visibility', 'hidden');
+  }
+  draw(0, '');
+  return draw;
+}
+var spLive = null, spLiveKey = null, spIntro = null, spCal = null, spDisp = 0, spTarget = 0, spCls = '';
+var introCount = { s: 0, f: 0, phase: 0 };
+function animate(ts) {
+  requestAnimationFrame(animate);
+  if (document.hidden) return;
+  if (!E.vLive.hidden && spLive) { spDisp += (spTarget - spDisp) * (REDUCED ? 1 : 0.14); spLive(spDisp, spCls); }
+  if (!E.vStart.hidden && spIntro && !REDUCED) {
+    var P = 7000, ph = (ts % P) / P, s;
+    if (ph < 0.32) s = 0; else if (ph < 0.46) s = smooth((ph - 0.32) / 0.14); else if (ph < 0.82) s = 1; else if (ph < 0.95) s = 1 - smooth((ph - 0.82) / 0.13); else s = 0;
+    var phase = ph >= 0.46 && ph < 0.82 ? 1 : 0;
+    if (phase !== introCount.phase) { if (phase) introCount.s++; else introCount.f++; introCount.phase = phase; E.introCap.innerHTML = introCount.s + ' ' + Core.plural(introCount.s, 'pogrbljenje', 'pogrbljenja', 'pogrbljenja') + '<br>' + introCount.f + ' ' + Core.plural(introCount.f, 'ispravljanje', 'ispravljanja', 'ispravljanja'); }
+    spIntro(s * 0.85, s > 0.5 ? 'is-slouch' : '');
+    E.introBoard.classList.toggle('is-slouch', s > 0.5);
+  }
+}
+function smooth(x) { return x * x * (3 - 2 * x); }
+
+/* ---------- calibration ---------- */
+function showCalibCam() {
+  E.calEyebrow.textContent = 'Kamera · kalibracija';
+  E.calTitle.textContent = 'Pokaži kako izgleda uspravno';
+  E.calSteps.innerHTML = '<li>Postavi kameru ispred sebe, otprilike u visini očiju.</li><li>Sjedni onako kako bi želio sjediti: leđa ravna, ramena opuštena, pogled u ekran.</li><li>Kamera treba vidjeti glavu i oba ramena. Pritisni gumb i ostani tako 3 sekunde.</li>';
+  E.calSkipWrap.hidden = true; E.calBoard.hidden = true;
+  E.btnCalGo.textContent = 'Snimi uspravno'; E.btnCalGo.disabled = true;
+  setCalStatus('Pokrećem kameru…', '');
+  placeCam('calib'); showView('vCalib');
+}
+function showCalibSensor() {
+  E.calEyebrow.textContent = 'Senzor · kalibracija';
+  E.calTitle.textContent = 'Mobitel na prsa, pa dva položaja';
+  E.calSteps.innerHTML = '<li>Pritisni <strong>Kreni</strong>. Imaš 6 sekundi da mobitel spremiš u džep košulje ili ga pričvrstiš na prsa, ekranom prema van. Ekran će se zacrniti.</li><li><strong>Jedan zvuk:</strong> sjedni uspravno i ne miči se 3 sekunde.</li><li><strong>Dva zvuka:</strong> pogrbi se kao kad dugo gledaš u mobitel i ostani tako.</li><li><strong>Tri zvuka:</strong> gotovo, Grbometar mjeri.</li>';
+  E.calSkipWrap.hidden = false; E.calBoard.hidden = false;
+  if (!spCal) spCal = makeSpine(E.calBoard, true);
+  E.btnCalGo.textContent = 'Kreni'; E.btnCalGo.disabled = false;
+  setCalStatus(Sensor.fresh() ? 'Senzor šalje podatke.' : 'Čekam senzor…', Sensor.fresh() ? 'ok' : '');
+  showView('vCalib');
+}
+function calibTick(smp) {
+  if (A.mode === 'cam') {
+    if (!Cam.lm) return;
+    var f = smp && smp.f;
+    if (A.calRun && A.calRun.collecting) A.calRun.list.push(f || null);
+    if (A.calRun) return;
+    if (!f) setCalStatus('Ne vidim te. Sjedni ispred kamere.', 'warn');
+    else if (!f.sh) setCalStatus('Vidim glavu, ali ne i oba ramena. Odmakni se malo ili spusti kameru.', 'warn');
+    else setCalStatus('Vidim glavu i oba ramena.', 'ok');
+    E.btnCalGo.disabled = !f;
+  }
+}
+async function runCamCalib() {
+  if (A.calRun) return;
+  A.calRun = { collecting: false, list: [] };
+  E.btnCalGo.disabled = true;
+  setCalStatus('Ostani tako…', 'ok');
+  E.camCount.hidden = false;
+  for (var i = 3; i >= 1; i--) { E.camCount.textContent = i; chime('beep', true); await wait(1000); if (!A.calRun) { E.camCount.hidden = true; return; } }
+  E.camCount.textContent = '●'; A.calRun.collecting = true;
+  await wait(2400);
+  if (!A.calRun) { E.camCount.hidden = true; return; }
+  var list = A.calRun.list; A.calRun = null; E.camCount.hidden = true;
+  var b = Core.camCalib(list);
+  if (!b) { setCalStatus('Nisam te dobro vidio. Pokušaj ponovo, s licem i ramenima u kadru.', 'warn'); E.btnCalGo.disabled = false; return; }
+  A.cal = b; A.smooth = null; chime('double', true);
+  toast(b.sh ? 'Kalibrirano. Granica: ' + S.thrCam + NBSP + '% odstupanja.' : 'Kalibrirano bez ramena: mjerim samo po položaju glave.');
+  goLive();
+}
+function collectG(ms) {
+  return new Promise(function (res) {
+    var out = [], t0 = performance.now();
+    var id = setInterval(function () {
+      if (!A.calRun) { clearInterval(id); res(null); return; }
+      if (Sensor.fresh()) out.push(Sensor.g.slice());
+      if (performance.now() - t0 >= ms) { clearInterval(id); res(out); }
+    }, 100);
+  });
+}
+async function countdown(sec, label) {
+  for (var i = sec; i >= 1; i--) { E.pkLine.textContent = label + ' · ' + i; if (i <= 3) chime('tick', true); await wait(1000); if (!A.calRun) return false; }
+  return true;
+}
+async function runSensorCalib() {
+  if (A.calRun) return;
+  var skipBend = E.calSkip.checked;
+  A.calRun = { phase: 'prep' };
+  enterPocket();
+  E.pkCount.textContent = 'kalibracija';
+  speak('Spremi mobitel u džep i sjedni uspravno.');
+  if (!(await countdown(6, 'Spremi mobitel'))) return;
+  var up = null;
+  for (var attempt = 0; attempt < 3; attempt++) {
+    chime('beep', true); buzz(70); speak('Uspravno.');
+    E.pkLine.textContent = 'Sjedi uspravno';
+    up = await collectG(3000);
+    if (!A.calRun) return;
+    if (!up || up.length < 5) { calibFail('Senzor je prestao slati podatke.'); return; }
+    if (Core.spreadDeg(up) <= 6 || attempt === 2) break;
+    chime('low', true); speak('Previše se mičeš. Ponovo.'); E.pkLine.textContent = 'Previše pokreta, ponovo';
+    await wait(1600);
+    if (!A.calRun) return;
+  }
+  var bend = null;
+  if (!skipBend) {
+    chime('double', true); buzz([70, 90, 70]); speak('Sad se pogrbi i ostani tako.');
+    E.pkLine.textContent = 'Pogrbi se i ostani tako';
+    await wait(2600);
+    if (!A.calRun) return;
+    bend = await collectG(2600);
+    if (!A.calRun) return;
+  }
+  var cal = Core.sensorCalib(up, bend);
+  A.cal = cal; A.calRun = null;
+  if (cal.thr) { S.thrSensor = cal.thr; saveSettings(); }
+  chime('triple', true); buzz([60, 80, 60, 80, 60]);
+  speak(cal.f ? 'Gotovo. Mjerim.' : 'Gotovo. Mjerim svako odstupanje.');
+  goLive();
+  if (cal.f) toast('Kalibrirano. Pokazao si ' + Math.round(cal.demo) + '° grbe, granica je ' + S.thrSensor + '°.');
+  else toast(skipBend ? 'Kalibrirano. Mjerim svako odstupanje od uspravnog, granica ' + S.thrSensor + '°.' : 'Nisam osjetio pogrbljenje, pa mjerim svako odstupanje od uspravnog.');
+}
+function calibFail(msg) {
+  A.calRun = null;
+  if (A.pocket) exitPocket(true);
+  setCalStatus(msg, 'warn'); showView('vCalib');
+}
+function cancelCalib() {
+  A.calRun = null; E.camCount.hidden = true;
+  if (A.posture) { goLive(); return; }
+  stopSources(); A.mode = null; A.phase = 'start'; stopTicker(); showView('vStart'); renderStart();
+}
+
+/* ---------- session ---------- */
+function postureOpts() {
+  var thr = A.mode === 'cam' ? S.thrCam : A.mode === 'sensor' ? S.thrSensor : 12;
+  return { thr: thr, hyst: Math.max(2, thr * 0.2), alertDelayMs: S.alertDelay * 1000, repeatMs: Math.max(30000, S.alertDelay * 1000), standMs: S.standMin * 60000 };
+}
+function goLive() {
+  A.phase = 'live';
+  var now = A.clock();
+  if (!A.posture) { A.posture = new Core.Posture(postureOpts()); A.sessStart = now; A.saved = null; A.counted = null; A.lastSave = now; }
+  else { A.posture.setOpts(postureOpts()); A.posture.resume(now); }
+  if (A.mode === 'cam') placeCam(A.preview ? 'live' : 'park');
+  setupLive(); showView('vLive'); keepAwake(A.mode !== 'demo'); render(now);
+}
+function startRecal() {
+  if (!A.posture || A.mode === 'demo') return;
+  A.posture.pause(A.clock());
+  A.phase = 'calib';
+  if (A.mode === 'cam') showCalibCam(); else showCalibSensor();
+  if (A.mode === 'cam') E.btnCalGo.disabled = !Cam.lm;
+}
+function stopSources() {
+  if (A.mode === 'sensor') Sensor.stop();
+  if (A.mode === 'cam') { Cam.stop(); placeCam('park'); }
+}
+function endSession() {
+  var now = A.clock(), P = A.posture;
+  if (P) {
+    maybeSave(now, true);
+    var c = P.c;
+    A.lastSummary = (A.mode === 'demo' ? 'Demo sesija' : 'Zadnja sesija') + ': ' + Core.fmtMin(now - A.sessStart) + ' · ' + c.slouches + ' ' + Core.plural(c.slouches, 'pogrbljenje', 'pogrbljenja', 'pogrbljenja') +
+      ' · ' + (c.selfFix + c.alertFix) + ' ' + Core.plural(c.selfFix + c.alertFix, 'ispravljanje', 'ispravljanja', 'ispravljanja') + ' (sam ' + c.selfFix + ')' +
+      (Core.pct(c.uprightMs, c.slouchMs) != null ? ' · ' + Core.pct(c.uprightMs, c.slouchMs) + NBSP + '% uspravno' : '') + '.';
+  }
+  A.phase = 'start';
+  clearTimeout(A.resumeTimer);
+  if (A.pocket) exitPocket(true);
+  closeMini(); stopSources(); stopTicker(); keepAwake(false);
+  A.posture = null; A.cal = null; A.mode = null; A.smooth = null; A.calRun = null; A.pausedFromPocket = false;
+  E.standBanner.hidden = true;
+  setTopMeta();
+  showView('vStart'); renderStart();
+}
+function pauseSession(fromPocket) {
+  if (!A.posture || A.posture.paused) return;
+  A.posture.pause(A.clock()); A.pausedFromPocket = !!fromPocket;
+  setupButtons(); render(A.clock());
+}
+function resumeSession() {
+  if (!A.posture) return;
+  if (A.mode === 'sensor') {
+    enterPocket(); E.pkCount.textContent = 'nastavljam za 6 s';
+    clearTimeout(A.resumeTimer);
+    A.resumeTimer = setTimeout(function () { A.resumeTimer = null; if (A.posture && A.pocket) { A.posture.resume(A.clock()); A.pausedFromPocket = false; chime('beep', true); setupButtons(); } }, 6000);
+    return;
+  }
+  A.posture.resume(A.clock()); A.pausedFromPocket = false; setupButtons(); render(A.clock());
+}
+function onEvent(e) {
+  if (e === 'alert') { chime('alert'); buzz([180, 90, 180]); flash(); announce('Uspravi se.'); }
+  else if (e === 'stand') { chime('stand'); buzz([400, 150, 400]); E.standText.textContent = 'Sjediš ' + S.standMin + ' min bez pauze. Ustani se i prošetaj minutu.'; E.standBanner.hidden = false; }
+  else if (e === 'slouch') announce('Pogrbljeno.');
+  else if (e === 'fix-self' || e === 'fix-alert') announce('Uspravno.');
+}
+function flash() { [E.liveBoard].forEach(function (b) { b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash'); }); }
+
+/* ---------- history ---------- */
+function loadDays() { return A.demoHist || store.get(K_DAYS, {}); }
+function maybeSave(now, force) {
+  if (A.mode === 'demo' || !A.posture) return;
+  if (!force && now - A.lastSave < 5000) return;
+  A.lastSave = now;
+  var c = A.posture.c, p = A.saved || {}, days = store.get(K_DAYS, {}), k = Core.dayKey(new Date());
+  var d = days[k] || { s: 0, fs: 0, fa: 0, a: 0, up: 0, sl: 0, lg: 0, n: 0, st: 0 };
+  if (A.counted !== k) { d.n++; A.counted = k; }
+  d.s += c.slouches - (p.slouches || 0); d.fs += c.selfFix - (p.selfFix || 0); d.fa += c.alertFix - (p.alertFix || 0);
+  d.a += c.alerts - (p.alerts || 0); d.st += c.stands - (p.stands || 0);
+  d.up = Math.max(0, d.up + c.uprightMs - (p.uprightMs || 0)); d.sl = Math.max(0, d.sl + c.slouchMs - (p.slouchMs || 0));
+  d.lg = Math.max(d.lg, c.longestMs);
+  days[k] = d;
+  var cut = Core.dayKey(new Date(Date.now() - 150 * 864e5));
+  Object.keys(days).forEach(function (key) { if (key < cut) delete days[key]; });
+  store.set(K_DAYS, days);
+  A.saved = Object.assign({}, c);
+}
+var WD = ['ned', 'pon', 'uto', 'sri', 'čet', 'pet', 'sub'];
+function lastDays(n) { var out = [], d = new Date(); for (var i = n - 1; i >= 0; i--) { var x = new Date(d.getFullYear(), d.getMonth(), d.getDate() - i); out.push({ key: Core.dayKey(x), date: x, today: i === 0 }); } return out; }
+function renderStart() {
+  var demo = !!A.demoHist, days = loadDays(), tk = Core.dayKey(new Date()), t = days[tk];
+  E.todayNote.textContent = demo ? 'primjer podataka' : '';
+  E.histNote.textContent = (demo ? 'primjer podataka · ' : '') + 'udio vremena u uspravnom položaju';
+  E.lastSess.hidden = !A.lastSummary; E.lastSess.textContent = A.lastSummary || '';
+  if (!t || (t.up + t.sl) < 1000) {
+    E.todayBody.innerHTML = '<p class="empty">Danas još nema mjerenja. Odaberi kameru ili senzor i kreni.</p>';
+  } else {
+    var fix = t.fs + t.fa, share = fix ? Math.round(t.fs / fix * 100) : null;
+    E.todayBody.innerHTML = '<dl class="readout">' +
+      cell('Pogrbljenja', t.s, 'u ' + t.n + ' ' + Core.plural(t.n, 'sesiji', 'sesije', 'sesija')) +
+      cell('Ispravljanja', fix, 'sam ' + t.fs + ' · na opomenu ' + t.fa) +
+      cell('Opomene', t.a, 'najduža grba ' + Core.fmtClock(t.lg)) +
+      cell('Uspravno', Core.pct(t.up, t.sl) + NBSP + '%', Core.fmtMin(t.up) + ' od ' + Core.fmtMin(t.up + t.sl)) + '</dl>' +
+      (share != null ? '<p class="facts">Sam si se ispravio u ' + share + NBSP + '% slučajeva. Taj broj treba rasti iz tjedna u tjedan; broj opomena padati.</p>' : '');
+  }
+  renderHistory(days);
+}
+function cell(label, num, sub) { return '<div class="cell"><dt>' + label + '</dt><dd class="num">' + num + '</dd><dd class="cell-sub">' + sub + '</dd></div>'; }
+function renderHistory(days) {
+  var rows = lastDays(14), host = E.histChart;
+  var any = rows.some(function (r) { var d = days[r.key]; return d && d.up + d.sl > 1000; });
+  if (!any) { host.innerHTML = '<p class="empty">Ovdje će se skupljati dani. Treba barem jedna sesija.</p>'; E.histTable.innerHTML = ''; return; }
+  var W = Math.max(300, host.clientWidth || 640), H = 170, pl = 38, pr = 6, pt = 10, pb = 28, pw = W - pl - pr, ph = H - pt - pb;
+  var slot = pw / rows.length, bw = Math.min(24, slot * 0.62), Y = function (v) { return pt + ph - v / 100 * ph; };
+  var out = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" role="img" aria-label="Udio uspravnog vremena po danu, zadnjih 14 dana">';
+  [0, 50, 100].forEach(function (v) { var y = Math.round(Y(v)) + 0.5; out += '<line class="' + (v ? 'gl' : 'base') + '" x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y + '" y2="' + y + '"/><text class="ax" x="' + (pl - 8) + '" y="' + (y + 3.5) + '" text-anchor="end">' + v + NBSP + '%</text>'; });
+  var every = slot < 26 ? 2 : 1;
+  rows.forEach(function (r, i) {
+    var d = days[r.key], cx = pl + slot * i + slot / 2, has = d && d.up + d.sl > 1000;
+    var lab = r.today ? 'danas' : r.date.getDate() + '.';
+    if (r.today || (rows.length - 1 - i) % every === 0) out += '<text class="ax' + (r.today ? ' today' : '') + '" x="' + cx.toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle">' + lab + '</text>';
+    if (!has) { out += '<line class="nod" x1="' + (cx - 3).toFixed(1) + '" x2="' + (cx + 3).toFixed(1) + '" y1="' + (Y(0) - 0.5) + '" y2="' + (Y(0) - 0.5) + '"/>'; return; }
+    var v = Core.pct(d.up, d.sl), y0 = Y(0), y1 = Y(v), hgt = y0 - y1, rr = Math.min(4, bw / 2, hgt), x0 = cx - bw / 2;
+    var path = 'M' + x0.toFixed(1) + ' ' + y0.toFixed(1) + 'V' + (y1 + rr).toFixed(1) + 'Q' + x0.toFixed(1) + ' ' + y1.toFixed(1) + ' ' + (x0 + rr).toFixed(1) + ' ' + y1.toFixed(1) + 'H' + (x0 + bw - rr).toFixed(1) + 'Q' + (x0 + bw).toFixed(1) + ' ' + y1.toFixed(1) + ' ' + (x0 + bw).toFixed(1) + ' ' + (y1 + rr).toFixed(1) + 'V' + y0.toFixed(1) + 'Z';
+    var tip = WD[r.date.getDay()] + ' ' + r.date.getDate() + '. ' + (r.date.getMonth() + 1) + '. · ' + v + NBSP + '% uspravno · ' + d.s + ' ' + Core.plural(d.s, 'pogrbljenje', 'pogrbljenja', 'pogrbljenja') + ' · ' + d.a + ' ' + Core.plural(d.a, 'opomena', 'opomene', 'opomena');
+    out += '<g tabindex="0" data-tip="' + tip + '" data-x="' + cx.toFixed(1) + '" data-y="' + y1.toFixed(1) + '" aria-label="' + tip + '"><rect class="hit" x="' + (cx - slot / 2 + 1).toFixed(1) + '" y="' + pt + '" width="' + (slot - 2).toFixed(1) + '" height="' + ph + '"/><path class="bar" d="' + path + '"/></g>';
+  });
+  out += '</svg><div class="tip" id="histTip" hidden></div>';
+  host.innerHTML = out;
+  var tipEl = host.querySelector('#histTip'), svgEl = host.querySelector('svg');
+  var showTip = function (g) { var sc = svgEl.getBoundingClientRect().width / W; tipEl.textContent = g.getAttribute('data-tip'); tipEl.style.left = Core.clamp(+g.getAttribute('data-x') * sc, 90, svgEl.getBoundingClientRect().width - 90) + 'px'; tipEl.style.top = (+g.getAttribute('data-y') * sc) + 'px'; tipEl.hidden = false; };
+  host.querySelectorAll('g[data-tip]').forEach(function (g) {
+    g.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') showTip(g); });
+    g.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') tipEl.hidden = true; });
+    g.addEventListener('click', function () { showTip(g); });
+    g.addEventListener('focus', function () { showTip(g); });
+    g.addEventListener('blur', function () { tipEl.hidden = true; });
+  });
+  var tb = '<thead><tr><th>Dan</th><th>Uspravno</th><th>Pogrbljenja</th><th>Sam</th><th>Na opomenu</th><th>Opomene</th><th>Mjereno</th></tr></thead><tbody>';
+  rows.slice().reverse().forEach(function (r) { var d = days[r.key]; if (!d || d.up + d.sl <= 1000) return; tb += '<tr><td>' + WD[r.date.getDay()] + ' ' + r.date.getDate() + '. ' + (r.date.getMonth() + 1) + '.</td><td>' + Core.pct(d.up, d.sl) + NBSP + '%</td><td>' + d.s + '</td><td>' + d.fs + '</td><td>' + d.fa + '</td><td>' + d.a + '</td><td>' + Core.fmtMin(d.up + d.sl) + '</td></tr>'; });
+  E.histTable.innerHTML = tb + '</tbody>';
+}
+
+/* ---------- live rendering ---------- */
+function setTopMeta() {
+  var on = !!A.mode && A.phase !== 'start';
+  E.modeTag.hidden = !on || A.mode === 'demo'; E.sessTime.hidden = !(on && A.phase === 'live');
+  E.demoTag.hidden = A.mode !== 'demo';
+  E.modeTag.textContent = A.mode === 'cam' ? 'Kamera' : A.mode === 'sensor' ? 'Senzor' : 'Simulacija senzora';
+}
+function setupButtons() {
+  var demo = A.mode === 'demo', P = A.posture;
+  E.btnRecal.hidden = demo;
+  E.btnPocket.hidden = A.mode !== 'sensor';
+  E.btnMini.hidden = !('documentPictureInPicture' in window) || EMBED || A.mode === 'sensor';
+  E.btnMini.textContent = pipWin ? 'Zatvori mini prozor' : 'Mini prozor';
+  E.btnPreview.hidden = A.mode !== 'cam';
+  E.btnPreview.textContent = A.preview ? 'Sakrij sliku' : 'Prikaži sliku';
+  E.btnPause.textContent = P && P.paused ? (A.mode === 'sensor' && A.pausedFromPocket ? 'Vrati u džep i nastavi' : 'Nastavi') : 'Pauza';
+}
+function setupLive() {
+  setTopMeta(); setupButtons();
+  var key = A.mode === 'sensor' ? 'phone' : 'plain';
+  if (!spLive || spLiveKey !== key) { spLive = makeSpine(E.liveBoard, A.mode === 'sensor'); spLiveKey = key; spDisp = 0; }
+  var u = unitOf(A.mode), thr = A.posture.o.thr;
+  E.thrRange.value = thr; E.thrOut.textContent = thr + u;
+  E.traceUnit.textContent = A.mode === 'cam' ? 'odstupanje od uspravnog, %' : (A.mode === 'sensor' && A.cal && !A.cal.f ? 'odstupanje od uspravnog, °' : 'nagib naprijed, °');
+  E.cAlSub.textContent = 'nakon ' + S.alertDelay + ' s u grbi';
+  A.lastStrip = 0;
+}
+var ICO_UP = 'M11 3 C11 10 11 20 11 27', ICO_SL = 'M8 27 C4 18 8 9 18 5';
+function render(now) {
+  var P = A.posture; if (!P) return;
+  var c = P.c, inf = P.info(now), st = inf.state, u = unitOf(A.mode), thr = P.o.thr, cam = A.mode === 'cam';
+  var label, sub, kind = st === 'slouch' ? 'is-slouch' : (st === 'upright' ? '' : 'is-idle');
+  if (st === 'upright') { label = 'Uspravno'; sub = 'uspravno već ' + Core.fmtClock(inf.uprightFor); }
+  else if (st === 'slouch') { label = inf.alerted ? 'Uspravi se' : 'Pogrbljeno'; sub = 'u grbi ' + Core.fmtClock(inf.slouchFor) + (inf.alerted ? ' · opomena poslana' : ' · opomena za ' + Math.ceil(inf.nextAlertIn / 1000) + ' s'); }
+  else if (st === 'absent') { label = cam ? 'Nema te' : 'Nema signala'; sub = cam ? 'ne vidim te pred kamerom' : 'senzor ne šalje podatke'; }
+  else if (st === 'moving') { label = 'U pokretu'; sub = 'mjerenje čeka da se smiriš'; }
+  else if (st === 'paused') { label = 'Pauza'; sub = A.pausedFromPocket ? 'mobitel je izvađen iz džepa' : 'mjerenje stoji'; }
+  else { label = 'Čekam'; sub = cam ? 'tražim te u kadru' : 'čekam podatke'; }
+  E.stLabel.textContent = label; E.stSub.textContent = sub;
+  E.stIco.setAttribute('class', 'state-ico' + (kind ? ' ' + kind : '')); E.stIcoPath.setAttribute('d', st === 'slouch' ? ICO_SL : ICO_UP);
+  var live = (st === 'upright' || st === 'slouch') && inf.m != null;
+  var m = live ? inf.m : null;
+  E.meterFill.style.width = (m == null ? 0 : Core.clamp(m / (2 * thr), 0, 1) * 100) + '%';
+  E.meterFill.classList.toggle('is-slouch', m != null && m > thr);
+  var what = cam ? 'Odstupanje' : (A.cal && A.mode === 'sensor' && !A.cal.f ? 'Odstupanje' : 'Nagib naprijed');
+  E.stReading.textContent = (m == null ? what + ' –' : what + ' ' + Math.round(m) + u) + ' · granica ' + thr + u;
+  E.liveBoard.classList.toggle('is-slouch', st === 'slouch');
+  spTarget = live ? Core.clamp(m / (1.6 * thr), 0, 1) : 0;
+  spCls = st === 'slouch' ? 'is-slouch' : (live ? '' : 'is-dim');
+  E.cSl.textContent = c.slouches;
+  E.cFix.textContent = c.selfFix + c.alertFix; E.cFixSub.textContent = 'sam ' + c.selfFix + ' · na opomenu ' + c.alertFix;
+  E.cAl.textContent = c.alerts;
+  var pu = Core.pct(c.uprightMs, c.slouchMs);
+  E.cUp.textContent = pu == null ? '–' : pu + NBSP + '%';
+  E.cUpSub.textContent = Core.fmtMin(c.uprightMs) + ' od ' + Core.fmtMin(c.uprightMs + c.slouchMs);
+  var fixes = c.selfFix + c.alertFix, longest = Math.max(c.longestMs, inf.slouchFor);
+  var facts = ['Najduže pogrbljenje ' + Core.fmtClock(longest)];
+  facts.push('bez ustajanja ' + Core.fmtMin(c.sitMs) + (S.standMin ? ' (podsjetnik svakih ' + S.standMin + ' min)' : ''));
+  if (fixes) facts.push('sam si se ispravio u ' + Math.round(c.selfFix / fixes * 100) + NBSP + '% slučajeva');
+  E.facts.textContent = facts.join(' · ');
+  E.sessTime.textContent = Core.fmtClock(now - A.sessStart);
+  E.mini.className = 'mini' + (kind ? ' ' + kind : '');
+  E.miniState.textContent = label; E.miniSub.textContent = sub;
+  E.miniCounts.innerHTML = c.slouches + ' ' + Core.plural(c.slouches, 'pogrbljenje', 'pogrbljenja', 'pogrbljenja') + '<br>' + c.alerts + ' ' + Core.plural(c.alerts, 'opomena', 'opomene', 'opomena');
+  if (A.pocket && !A.calRun && !(A.resumeTimer && P.paused)) {
+    E.pkLine.textContent = 'Grbometar mjeri · ' + label.toLowerCase();
+    E.pkCount.textContent = c.slouches + ' ' + Core.plural(c.slouches, 'pogrbljenje', 'pogrbljenja', 'pogrbljenja') + ' · ' + c.alerts + ' ' + Core.plural(c.alerts, 'opomena', 'opomene', 'opomena');
+  }
+  if (!E.vLive.hidden && !document.hidden) {
+    drawTrace(now);
+    var rnow = performance.now();
+    if (rnow - A.lastStrip > 1000) { A.lastStrip = rnow; drawStrip(now); }
+  }
+}
+function fitCanvas(cv, wrap, h) {
+  var w = wrap.clientWidth; if (!w) return null;
+  var dpr = Math.min(2, window.devicePixelRatio || 1);
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  var ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+  return { ctx: ctx, w: w, h: h };
+}
+var MONO = '"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace';
+function niceTop(v) { var steps = [10, 20, 30, 40, 60, 80, 100, 150, 200, 300]; for (var i = 0; i < steps.length; i++) if (steps[i] >= v) return steps[i]; return Math.ceil(v / 100) * 100; }
+function drawTrace(now) {
+  var P = A.posture, f = fitCanvas(E.trace, E.traceWrap, 150); if (!f || !P) return;
+  var ctx = f.ctx, w = f.w, h = f.h, thr = P.o.thr, span = P.o.traceMs, t0 = now - span, u = unitOf(A.mode);
+  var col = { grid: cssVar('--grid-strong'), muted: cssVar('--muted'), ink2: cssVar('--ink-2'), ok: cssVar('--ok'), warn: cssVar('--warn'), surface: cssVar('--surface'), ink: cssVar('--ink') };
+  var data = P.trace, maxV = thr * 2;
+  for (var i = 0; i < data.length; i++) if (data[i].m != null && data[i].m > maxV) maxV = data[i].m;
+  ctx.font = '10.5px ' + MONO;
+  var top = niceTop(maxV), pl = 34, pr = Math.ceil(Math.max(ctx.measureText('granica ' + thr + u).width, ctx.measureText('88' + u).width)) + 14, pt = 8, pb = 22, pw = w - pl - pr, ph = h - pt - pb;
+  var X = function (t) { return pl + (t - t0) / span * pw; }, Y = function (v) { return pt + ph - Core.clamp(v, 0, top) / top * ph; };
+  ctx.font = '10.5px ' + MONO; ctx.lineWidth = 1;
+  [0, top / 2, top].forEach(function (v) { var y = Math.round(Y(v)) + 0.5; ctx.strokeStyle = col.grid; ctx.beginPath(); ctx.moveTo(pl, y); ctx.lineTo(pl + pw, y); ctx.stroke(); ctx.fillStyle = col.muted; ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillText(String(v), pl - 6, y); });
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = col.muted;
+  [[t0, '−2 min', 'left'], [t0 + span / 2, '−1 min', 'center'], [now, 'sada', 'right']].forEach(function (a) { ctx.textAlign = a[2]; ctx.fillText(a[1], X(a[0]), h - pb + 7); });
+  var yT = Math.round(Y(thr)) + 0.5;
+  ctx.strokeStyle = col.ink2; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(pl, yT); ctx.lineTo(pl + pw, yT); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = col.ink2; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText('granica ' + thr + u, pl + pw + 8, yT);
+  ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  var prev = null;
+  for (var j = 0; j < data.length; j++) {
+    var d = data[j];
+    if (d.t < t0 - 1000 || d.m == null) { prev = null; continue; }
+    if (prev) { ctx.strokeStyle = d.s === 'slouch' ? col.warn : col.ok; ctx.beginPath(); ctx.moveTo(X(prev.t), Y(prev.m)); ctx.lineTo(X(d.t), Y(d.m)); ctx.stroke(); }
+    prev = d;
+  }
+  var last = data[data.length - 1];
+  if (last && last.m != null) {
+    var lx = X(last.t), ly = Y(last.m);
+    ctx.fillStyle = col.surface; ctx.beginPath(); ctx.arc(lx, ly, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = last.s === 'slouch' ? col.warn : col.ok; ctx.beginPath(); ctx.arc(lx, ly, 4, 0, Math.PI * 2); ctx.fill();
+    if (Math.abs(ly - yT) > 14) { ctx.fillStyle = col.ink; ctx.textAlign = 'left'; ctx.fillText(Math.round(last.m) + u, pl + pw + 8, ly); }
+  }
+  if (A.hover != null) {
+    var ht = t0 + (A.hover - pl) / pw * span, best = null, bd = Infinity;
+    for (var k = 0; k < data.length; k++) { var dd = Math.abs(data[k].t - ht); if (dd < bd) { bd = dd; best = data[k]; } }
+    if (best && A.hover >= pl && A.hover <= pl + pw) {
+      var hx = Math.round(X(best.t)) + 0.5;
+      ctx.strokeStyle = col.ink2; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(hx, pt); ctx.lineTo(hx, pt + ph); ctx.stroke();
+      var ago = Math.round((now - best.t) / 1000);
+      E.traceTip.textContent = (ago <= 0 ? 'sada' : 'prije ' + ago + ' s') + ' · ' + (best.m == null ? 'bez mjerenja' : Math.round(best.m) + unitOf(A.mode)) + (best.s === 'slouch' ? ' · pogrbljeno' : best.s === 'upright' ? ' · uspravno' : '');
+      E.traceTip.style.left = Core.clamp(hx, 70, w - 70) + 'px'; E.traceTip.style.top = (best.m == null ? pt + ph / 2 : Y(best.m)) + 'px'; E.traceTip.hidden = false;
+    } else E.traceTip.hidden = true;
+  } else E.traceTip.hidden = true;
+}
+function drawStrip(now) {
+  var P = A.posture, f = fitCanvas(E.strip, E.stripWrap, 16); if (!f || !P) return;
+  var ctx = f.ctx, w = f.w, h = f.h, t0 = A.sessStart, span = Math.max(now - t0, 60000);
+  var col = { upright: cssVar('--ok'), slouch: cssVar('--warn'), idle: cssVar('--idle') };
+  var segs = P.segs, n = segs.length;
+  for (var i = 0; i < n; i++) {
+    var s = segs[i], a = (Math.max(s.t0, t0) - t0) / span * w, b = ((s.t1 == null ? now : s.t1) - t0) / span * w;
+    if (b <= a) continue;
+    var x0 = a + (i > 0 ? 1 : 0), x1 = b - (i < n - 1 ? 1 : 0);
+    if (x1 - x0 < 1) { x0 = a; x1 = Math.max(a + 1, b); }
+    ctx.fillStyle = s.s === 'slouch' ? col.slouch : s.s === 'upright' ? col.upright : col.idle;
+    ctx.fillRect(x0, 0, x1 - x0, h);
+  }
+  E.stripEnd.textContent = Core.fmtMin(now - t0);
+}
+
+/* ---------- pocket mode ---------- */
+var holdT = null, holdStart = 0;
+function enterPocket() {
+  A.pocket = true; E.pocket.hidden = false;
+  E.pkLine.textContent = 'Grbometar mjeri'; E.pkCount.textContent = '';
+  if (!EMBED) {
+    try { var fe = document.documentElement.requestFullscreen; if (fe) { var pr = document.documentElement.requestFullscreen({ navigationUI: 'hide' }); if (pr && pr.catch) pr.catch(function () {}); } } catch (e) {}
+    try { history.pushState({ pocket: 1 }, ''); A.trap = true; } catch (e) {}
+  }
+  keepAwake(true);
+}
+function exitPocket(silent) {
+  if (!A.pocket) return;
+  A.pocket = false; E.pocket.hidden = true; cancelHold();
+  try { if (document.fullscreenElement) { var p = document.exitFullscreen(); if (p && p.catch) p.catch(function () {}); } } catch (e) {}
+  if (A.trap) { A.trap = false; A.ignorePop = true; try { history.back(); } catch (e) { A.ignorePop = false; } }
+  if (silent) return;
+  if (A.calRun) { A.calRun = null; setCalStatus('Kalibracija prekinuta. Pritisni Kreni za novi pokušaj.', 'warn'); showView('vCalib'); return; }
+  if (A.resumeTimer) { clearTimeout(A.resumeTimer); A.resumeTimer = null; }
+  if (A.phase === 'live' && A.mode === 'sensor') pauseSession(true);
+}
+function setRing(p) { E.pkRing.style.strokeDashoffset = (276.5 * (1 - Core.clamp(p, 0, 1))).toFixed(1); }
+function startHold() { cancelHold(); holdStart = performance.now(); holdT = setInterval(function () { var p = (performance.now() - holdStart) / 2000; setRing(p); if (p >= 1) { cancelHold(); exitPocket(false); } }, 40); }
+function cancelHold() { if (holdT) clearInterval(holdT); holdT = null; setRing(0); }
+
+/* ---------- mini window ---------- */
+var pipWin = null;
+async function toggleMini() {
+  if (pipWin) { closeMini(); return; }
+  if (!('documentPictureInPicture' in window)) return;
+  try { pipWin = await window.documentPictureInPicture.requestWindow({ width: 360, height: 120 }); }
+  catch (e) { pipWin = null; toast('Mini prozor se nije otvorio.'); return; }
+  var doc = pipWin.document;
+  Array.prototype.forEach.call(document.styleSheets, function (ss) {
+    try { var css = Array.prototype.map.call(ss.cssRules, function (r) { return r.cssText; }).join('\n'); var st = doc.createElement('style'); st.textContent = css; doc.head.appendChild(st); }
+    catch (e) { if (ss.href) { var l = doc.createElement('link'); l.rel = 'stylesheet'; l.href = ss.href; doc.head.appendChild(l); } }
+  });
+  var th = document.documentElement.getAttribute('data-theme'); if (th) doc.documentElement.setAttribute('data-theme', th);
+  doc.title = 'Grbometar'; doc.body.className = 'pip-body'; doc.body.appendChild(E.mini);
+  pipWin.addEventListener('pagehide', function () { E.miniHome.appendChild(E.mini); pipWin = null; setupButtons(); });
+  setupButtons();
+}
+function closeMini() { if (pipWin) { try { pipWin.close(); } catch (e) {} } }
+
+/* ---------- starting modes ---------- */
+function cameraError(e) {
+  var n = e && e.name;
+  if (EMBED) return 'U Claudeovu pregledu kamera je blokirana. Otvori Grbometar kao samostalnu stranicu: datoteku na računalu ili svoju adresu na GitHub Pagesu.';
+  if (n === 'Insecure' || window.isSecureContext === false) return 'Kamera radi samo na sigurnoj adresi (https) ili iz datoteke otvorene na računalu.';
+  if (n === 'NotAllowedError' || n === 'SecurityError') return 'Kamera nije dopuštena. Dopusti je u postavkama preglednika (ikona pokraj adrese) i pokušaj ponovo.';
+  if (n === 'NotFoundError' || n === 'OverconstrainedError' || n === 'NoCamera') return 'Nisam našao kameru na ovom uređaju.';
+  if (n === 'NotReadableError' || n === 'AbortError') return 'Kameru trenutno koristi druga aplikacija. Zatvori je i pokušaj ponovo.';
+  if (n === 'ModelError') return 'Model za prepoznavanje tijela nije se učitao. Prvo pokretanje treba internet; provjeri vezu i pokušaj ponovo.';
+  return 'Kamera se nije pokrenula (' + (e && e.message ? e.message : 'nepoznata greška') + ').';
+}
+function sensorError(e) {
+  var m = e && e.message;
+  if (EMBED) return 'U Claudeovu pregledu preglednik ne daje podatke senzora pokreta. Otvori Grbometar na mobitelu kao samostalnu stranicu (GitHub Pages).';
+  if (m === 'denied') return 'Pristup senzorima pokreta je odbijen. Dopusti ga u postavkama preglednika.';
+  if (window.isSecureContext === false) return 'Senzori pokreta rade samo na sigurnoj adresi (https).';
+  return 'Ovaj uređaj ne šalje podatke senzora pokreta. Treba ti mobitel; računala uglavnom nemaju akcelerometar.';
+}
+async function startCam() {
+  audioInit(); startMsg('');
+  if (A.mode === 'demo') endSession();
+  A.mode = 'cam'; A.clock = realClock; A.phase = 'calib'; A.cal = null; A.smooth = null;
+  setTopMeta(); showCalibCam(); startTicker();
+  try {
+    await Cam.start(function (s) { if (s === 'model') setCalStatus('Učitavam model za prepoznavanje tijela (do 15 MB, samo prvi put)…', ''); });
+    if (A.mode !== 'cam') return;
+    setCalStatus('Tražim te u kadru…', '');
+  } catch (e) {
+    console.warn(e);
+    Cam.stop(); placeCam('park'); stopTicker(); A.mode = null; A.phase = 'start'; setTopMeta(); showView('vStart'); startMsg(cameraError(e));
+  }
+}
+async function startSensor() {
+  audioInit(); voicesInit(); startMsg('');
+  var p = Sensor.start();
+  if (A.mode === 'demo') endSession();
+  try { await p; } catch (e) { console.warn(e); A.mode = null; startMsg(sensorError(e)); return; }
+  A.mode = 'sensor'; A.clock = realClock; A.phase = 'calib'; A.cal = null;
+  setTopMeta(); showCalibSensor(); startTicker();
+}
+function startDemo(interactive) {
+  if (interactive) audioInit();
+  startMsg('');
+  A.mode = 'demo'; Demo.init();
+  A.posture = new Core.Posture(postureOpts());
+  var T = 18 * 60000;
+  for (var t = 0; t <= T; t += 250) A.posture.update(t, Demo.sample(t));
+  A.sessStart = 0; A.cal = { u: [0, 1, 0], f: [0, 0, 1] };
+  var base = T, real0 = performance.now();
+  A.clock = function () { return base + (performance.now() - real0) * 3; };
+  A.phase = 'live'; setupLive(); showView('vLive'); startTicker(); render(A.clock());
+}
+
+/* ---------- events ---------- */
+E.btnCam.addEventListener('click', startCam);
+E.btnSensor.addEventListener('click', startSensor);
+E.btnDemo.addEventListener('click', function () { if (A.mode) endSession(); startDemo(true); });
+E.btnCalGo.addEventListener('click', function () { audioInit(); if (A.mode === 'cam') runCamCalib(); else if (A.mode === 'sensor') runSensorCalib(); });
+E.btnCalCancel.addEventListener('click', cancelCalib);
+E.btnEnd.addEventListener('click', endSession);
+E.btnRecal.addEventListener('click', startRecal);
+E.btnPause.addEventListener('click', function () { if (!A.posture) return; if (A.posture.paused) resumeSession(); else pauseSession(false); });
+E.btnPocket.addEventListener('click', function () { enterPocket(); render(A.clock()); });
+E.btnMini.addEventListener('click', toggleMini);
+E.btnPreview.addEventListener('click', function () { A.preview = !A.preview; placeCam(A.preview ? 'live' : 'park'); setupButtons(); });
+E.btnStandOk.addEventListener('click', function () { E.standBanner.hidden = true; });
+E.thrRange.addEventListener('input', function () {
+  var v = +E.thrRange.value;
+  if (A.mode === 'cam') S.thrCam = v; else if (A.mode === 'sensor') S.thrSensor = v;
+  if (A.mode !== 'demo') saveSettings();
+  if (A.posture) { A.posture.setOpts({ thr: v, hyst: Math.max(2, v * 0.2) }); render(A.clock()); }
+  E.thrOut.textContent = v + unitOf(A.mode);
+});
+E.pkHold.addEventListener('pointerdown', function (e) { e.preventDefault(); startHold(); });
+['pointerup', 'pointercancel', 'pointerleave'].forEach(function (n) { E.pkHold.addEventListener(n, cancelHold); });
+E.pocket.addEventListener('pointerdown', function (e) { e.preventDefault(); });
+E.pocket.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && A.pocket) exitPocket(false); });
+window.addEventListener('popstate', function () {
+  if (A.ignorePop) { A.ignorePop = false; return; }
+  if (A.pocket) { try { history.pushState({ pocket: 1 }, ''); } catch (e) {} }
+});
+E.trace.addEventListener('pointermove', function (e) { var r = E.trace.getBoundingClientRect(); A.hover = e.clientX - r.left; if (A.posture) drawTrace(A.clock()); });
+E.trace.addEventListener('pointerleave', function () { A.hover = null; E.traceTip.hidden = true; });
+document.addEventListener('visibilitychange', function () {
+  if (document.visibilityState === 'visible') {
+    if (A.wantAwake) keepAwake(true);
+    if (A.hiddenAt && A.mode === 'sensor' && A.phase === 'live') { var gap = performance.now() - A.hiddenAt; if (gap > 3000) toast('Mjerenje je stajalo ' + Core.fmtClock(gap) + ' dok ekran nije bio vidljiv.'); }
+    A.hiddenAt = null;
+  } else { A.hiddenAt = performance.now(); if (A.posture) maybeSave(A.clock(), true); }
+});
+window.addEventListener('pagehide', function () { if (A.posture) maybeSave(A.clock(), true); });
+var rzT = null;
+window.addEventListener('resize', function () { clearTimeout(rzT); rzT = setTimeout(function () { if (!E.vStart.hidden) renderHistory(loadDays()); if (A.posture) { A.lastStrip = 0; render(A.clock()); } }, 150); });
+
+/* settings */
+E.setDelay.value = String(S.alertDelay); E.setStand.value = String(S.standMin);
+E.setSound.checked = !!S.sound; E.setVib.checked = !!S.vibrate; E.setVoice.checked = !!S.voice;
+E.setVibWrap.hidden = !('vibrate' in navigator);
+E.setVoiceWrap.hidden = !('speechSynthesis' in window);
+function settingsChanged() {
+  S.alertDelay = +E.setDelay.value; S.standMin = +E.setStand.value; S.sound = E.setSound.checked; S.vibrate = E.setVib.checked; S.voice = E.setVoice.checked;
+  saveSettings();
+  if (A.posture) { A.posture.setOpts(postureOpts()); E.cAlSub.textContent = 'nakon ' + S.alertDelay + ' s u grbi'; }
+}
+[E.setDelay, E.setStand, E.setSound, E.setVib, E.setVoice].forEach(function (el) { el.addEventListener('change', settingsChanged); });
+E.btnClear.addEventListener('click', function () { E.clearConfirm.hidden = false; E.btnClear.hidden = true; });
+E.btnClearNo.addEventListener('click', function () { E.clearConfirm.hidden = true; E.btnClear.hidden = false; });
+E.btnClearYes.addEventListener('click', function () {
+  E.clearConfirm.hidden = true; E.btnClear.hidden = false;
+  if (A.demoHist) { toast('U pregledu nema spremljenih dana, ovo su primjeri.'); return; }
+  store.set(K_DAYS, {}); A.lastSummary = null; renderStart(); toast('Povijest je obrisana.');
+});
+
+/* ---------- boot ---------- */
+spIntro = makeSpine(E.introBoard, false);
+requestAnimationFrame(animate);
+if (EMBED) {
+  E.embedNote.hidden = false;
+  A.demoHist = makeDemoHist();
+  renderStart();
+  startDemo(false);
+} else {
+  renderStart();
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+  }
+}
+window.Grbometar = { A: A, Core: Core, S: S, Sensor: Sensor, Cam: Cam };
+})();
+</script>
+
+</body>
+</html>
